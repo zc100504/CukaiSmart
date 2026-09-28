@@ -5,6 +5,8 @@ import {
   Building2,
   CheckCircle2,
   FileCheck2,
+  Files,
+  History,
   ScanText,
   ShieldCheck,
   Sparkles,
@@ -17,7 +19,7 @@ import Logo from '../components/Logo.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import Modal from '../components/Modal.jsx';
-import HeroVisual from '../components/hero/HeroVisual.jsx';
+import ProductWindow from '../components/hero/ProductWindow.jsx';
 import { usePrefersReducedMotion } from '../components/useMediaQuery.js';
 
 const DEMO_STEPS = [
@@ -88,7 +90,6 @@ export default function Landing() {
   const reducedMotionRef = useRef(reducedMotion);
   reducedMotionRef.current = reducedMotion;
   const [demoOpen, setDemoOpen] = useState(false);
-  const heroTextRef = useRef(null);
 
   // Scroll to the section in the URL hash (or to the top for "/").
   useEffect(() => {
@@ -109,32 +110,44 @@ export default function Landing() {
       <PublicNavbar fixed />
 
       <main>
-        {/* ---------- Hero: centred text over a full-width 3D stage ---------- */}
-        <section className="hero-full" aria-labelledby="hero-title">
-          <div className="hero-full__text" ref={heroTextRef}>
+        {/* ---------- Hero: centred text above a product window ---------- */}
+        <section className="hero-pw" aria-labelledby="hero-title">
+          <div className="hero-pw__text">
             <p className="hero__pill">
               <span className="hero__pill-tag">New</span>
-              Introducing Next-Gen AI Agent
+              Next-Gen AI Tax Agent
             </p>
-            <h1 id="hero-title" className="text-display hero-full__title">
-              <span className="text-highlight-lg">AI Tax Agent</span> is ready to help
+            <h1 id="hero-title" className="text-display hero-pw__title">
+              AI prepares your e-Invoices.
               <br />
-              Malaysia’s businesses
+              <span className="text-highlight-lg">You stay in control.</span>
             </h1>
-            <p className="hero-full__sub">
-              Get ready for e-Invoicing without the paperwork. Upload invoices and receipts, let AI extract and check
-              the details, and approve MyInvois-ready records in minutes.
+            <p className="hero-pw__sub">
+              Upload invoices and receipts. CukaiSmart extracts, checks and flags. You approve what’s MyInvois-ready.
             </p>
-            <div className="row hero-full__actions">
+            <div className="row hero-pw__actions">
               <Button to="/signup" size="lg" pill>
-                Start Trial
+                Start free trial
               </Button>
               <Button variant="secondary" size="lg" pill iconRight={ArrowRight} onClick={() => setDemoOpen(true)}>
-                Watch Demo
+                Watch demo
               </Button>
             </div>
           </div>
-          <HeroVisual textRef={heroTextRef} />
+
+          <ProductWindow />
+
+          <ul className="hero-trust">
+            <li>
+              <ShieldCheck size={16} aria-hidden="true" /> Built for LHDN MyInvois
+            </li>
+            <li>
+              <Files size={16} aria-hidden="true" /> Sales and purchase documents
+            </li>
+            <li>
+              <History size={16} aria-hidden="true" /> Every change audited
+            </li>
+          </ul>
         </section>
 
         {/* ---------- How it works ---------- */}

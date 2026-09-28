@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 // The PNG has transparent padding around the artwork; .logo crops it in CSS.
 const LOGO_SRC = '/LOGO.png';
 
-/** size: 'md' (navbar, sidebar) | 'lg' (auth pages, style guide) */
+/** size: 'sm' (hero product window) | 'md' (navbar, sidebar) | 'lg' (auth pages, style guide) */
 export default function Logo({ to = '/', size = 'md' }) {
-  const className = `logo ${size === 'lg' ? 'logo--lg' : ''}`;
+  const className = `logo ${size !== 'md' ? `logo--${size}` : ''}`;
   const img = <img src={LOGO_SRC} alt="CukaiSmart" className="logo__img" />;
 
   if (!to) return <span className={className}>{img}</span>;

@@ -214,6 +214,10 @@ textarea {
   text-decoration: none;
 }
 
+.logo--sm {
+  --logo-h: 18px;
+}
+
 .logo--lg {
   --logo-h: 48px;
 }
@@ -1784,23 +1788,17 @@ a.logo:focus-visible {
   box-shadow: var(--focus-ring);
 }
 
-/* ---------- Hero: centred text over a full-width 3D stage ---------- */
-.hero-full {
-  position: relative;
+/* ---------- Hero: centred text above a product window ---------- */
+.hero-pw {
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 100vh;
-  min-height: 760px; /* keep in sync with HERO_MIN_HEIGHT in hero/stage.js */
-  padding: calc(var(--navbar-height) + clamp(24px, 4vh, 56px)) var(--space-4) 0;
-  overflow: hidden;
-  background: var(--gradient-hero);
-  isolation: isolate;
+  padding: calc(var(--navbar-height) + clamp(40px, 11vh, 140px)) var(--space-4) var(--space-6);
+  /* Pale gradient at the top, fading into the page background behind the lower window. */
+  background: linear-gradient(to bottom, transparent 45%, var(--bg) 80%), var(--gradient-hero);
 }
 
-.hero-full__text {
-  position: relative;
-  z-index: 2;
+.hero-pw__text {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1809,18 +1807,18 @@ a.logo:focus-visible {
   text-align: center;
 }
 
-.hero-full__title {
+.hero-pw__title {
   margin: 0;
 }
 
 /* --grey-text keeps the subtitle above 4.5:1 on the pale gradient. */
-.hero-full__sub {
-  max-width: 640px;
-  font-size: var(--fs-body-lg);
+.hero-pw__sub {
+  max-width: 620px;
+  font-size: 17px;
   color: var(--grey-text);
 }
 
-.hero-full__actions {
+.hero-pw__actions {
   justify-content: center;
   margin-top: var(--space-1);
 }
@@ -1852,190 +1850,408 @@ a.logo:focus-visible {
   color: var(--teal-text-strong);
 }
 
-/* Stage: fills the hero behind the text. Only the drag area and the dock take pointer input. */
-.hero-stage {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-caption);
+  color: var(--grey-text);
 }
 
-.hero-visual {
-  position: absolute;
-  inset: 0;
+.hero-trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-trust svg {
+  color: var(--teal-text);
+}
+
+/* ---------- Product window ---------- */
+.pw {
+  width: 100%;
+  max-width: 1120px;
+  /* Window top lands at about 60% of the viewport at 1440 × 900 and runs below the fold. */
+  margin-top: clamp(40px, 9vh, 110px);
+}
+
+.pw__frame {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: var(--shadow-window);
+  transform-origin: 50% 0;
+  will-change: transform;
+  pointer-events: none;
   user-select: none;
 }
 
-.hero-visual__scene {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 500ms ease;
-}
-
-.hero-stage--live .hero-visual__scene {
-  opacity: 1;
-}
-
-.hero-canvas {
-  width: 100%;
-  height: 100%;
-}
-
-/* Fallback covers the hero with the same 1440 × 900 stage as the 3D scene. */
-.hero-fallback {
-  position: absolute;
-  inset: 0;
-  transition: opacity 500ms ease;
-}
-
-.hero-stage--live .hero-fallback {
-  opacity: 0;
-}
-
-.hero-fallback__svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-/* Hand images fade in once loaded (the invoice is already there). */
-.hero-fallback__hand {
-  animation: hero-hand-in 400ms ease both;
-}
-
-@keyframes hero-hand-in {
-  from {
-    opacity: 0;
-  }
-}
-
-/* Positioned inline over the invoice (from hero/stage.js). */
-.hero-drag {
-  position: absolute;
-  pointer-events: auto;
-  cursor: grab;
-  touch-action: none;
-}
-
-.hero-drag:active {
-  cursor: grabbing;
-}
-
-/* ---------- Control dock ---------- */
-.hero-dock-wrap {
-  position: absolute;
-  left: 50%;
-  bottom: var(--space-2); /* 16px */
-  z-index: 3;
-  transform: translateX(-50%);
-  pointer-events: auto;
-}
-
-.dock {
+.pw__bar {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+  gap: var(--space-1-5);
+  height: 44px;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--border);
   background: var(--card);
-  box-shadow: var(--shadow-dropdown);
 }
 
-.dock__steps {
+.pw__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.pw__dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.pw__status {
+  margin-left: auto;
+}
+
+.pw__body {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg);
+}
+
+.pw__doc {
+  position: relative;
+  align-self: start;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.pw__scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--teal);
+  box-shadow: 0 0 0 6px var(--teal-pale);
+  opacity: 0.9;
+}
+
+.pw__panel {
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.pw__panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2) var(--space-1-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.pw__rows {
   margin: 0;
-  padding: 0;
+  padding: var(--space-1) var(--space-1);
   list-style: none;
 }
 
-.dock__item {
+.pw-row {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) 20px;
+  align-items: center;
+  column-gap: var(--space-1-5);
+  row-gap: 6px;
+  min-height: 40px;
+  padding: 6px var(--space-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-label);
+}
+
+.pw-row__label {
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+}
+
+.pw-row__value {
+  overflow: hidden;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
+.pw-row__skeleton {
+  display: inline-block;
+  width: 60%;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  vertical-align: middle;
+}
+
+.pw-row__icon {
+  display: inline-flex;
+}
+
+.pw-row--ok .pw-row__icon {
+  color: var(--success);
+}
+
+.pw-row--warn {
+  border-color: var(--warning);
+  background: var(--warning-pale);
+}
+
+.pw-row--warn .pw-row__icon {
+  color: var(--warning);
+}
+
+.pw-row__extra {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.pw-row__reason {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--warning-text);
+}
+
+.pw-row__confirmed {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--success-text);
+}
+
+.pw-confirm,
+.pw-approve {
   position: relative;
   display: inline-flex;
 }
 
-.dock__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.dock__btn:hover {
-  background: var(--bg);
-  color: var(--navy);
-}
-
-.dock__btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.dock__btn.is-active {
-  background: var(--teal-pale);
-  color: var(--teal-text);
-}
-
-/* Tooltip (visual only; each button already has an aria-label). */
-.dock__tip {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  padding: 4px var(--space-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  box-shadow: var(--shadow-dropdown);
-  color: var(--text);
-  font-size: var(--fs-caption-sm);
-  font-weight: var(--fw-semibold);
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, 4px);
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-
-.dock__item:hover .dock__tip,
-.dock__btn:focus-visible + .dock__tip {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-/* Static legend (fallback / small screens) */
-.dock--legend {
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px var(--space-1);
-  margin: 0;
-  padding: 6px var(--space-1-5);
-  list-style: none;
-}
-
-.dock__legend {
+.pw__footer {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px var(--space-1);
-  border-radius: var(--radius-pill);
+  gap: var(--space-2);
+  margin-top: auto;
+  padding: var(--space-1-5) var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
+.pw__badge {
+  display: inline-flex;
+  transform-origin: left center;
+}
+
+/* Click ripple: --p goes 0 → 1 */
+.pw-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border: 2px solid var(--teal);
+  border-radius: 50%;
+  opacity: calc(1 - var(--p));
+  transform: scale(calc(0.3 + var(--p) * 0.9));
+  pointer-events: none;
+}
+
+.pw-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  margin: -2px 0 0 -2px;
+  pointer-events: none;
+}
+
+.pw-cursor svg {
+  display: block;
+  fill: var(--card);
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  filter: drop-shadow(var(--shadow-cursor));
+  transition: transform 120ms ease;
+}
+
+.pw-cursor.is-pressed svg {
+  transform: scale(0.88);
+}
+
+/* ---------- Document preview (HTML/CSS invoice) ---------- */
+.docp {
+  padding: 18px 18px 20px;
+  color: var(--text);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.docp p {
+  margin: 0;
+}
+
+.docp__head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-1);
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--text);
+}
+
+.docp__company {
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+}
+
+.docp__muted {
   color: var(--text-secondary);
-  font-size: var(--fs-caption);
+}
+
+.docp__title-block {
+  text-align: right;
+}
+
+.docp__title {
+  font-size: 16px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.12em;
+}
+
+.docp__meta {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0 8px;
+  margin: 4px 0 0;
+}
+
+.docp__meta dt {
+  color: var(--text-secondary);
+}
+
+.docp__meta dd {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.docp__bill {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-top: 12px;
+}
+
+.docp__label {
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.docp__buyer {
+  font-size: 11.5px;
   font-weight: var(--fw-semibold);
 }
 
-.dock__legend.is-active {
+.docp__class {
+  text-align: right;
+}
+
+.docp__lines {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+}
+
+.docp__lines th {
+  padding: 5px 4px;
+  background: var(--surface-muted);
+  font-size: 9.5px;
+  text-align: left;
+}
+
+.docp__lines td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.docp__lines th:not(:first-child),
+.docp__lines td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.docp__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 60%;
+  margin: 10px 0 0 auto;
+}
+
+.docp__totals p {
+  display: flex;
+  justify-content: space-between;
+}
+
+.docp__total {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 2px solid var(--text);
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+}
+
+.docp-region {
+  margin: -2px -4px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.docp-region--faded {
+  opacity: 0.4;
+}
+
+.docp-region--scan {
+  border-color: var(--teal);
   background: var(--teal-pale);
-  color: var(--teal-text);
+}
+
+.docp-region--warn {
+  border-color: var(--warning);
+  background: var(--warning-pale);
+  opacity: 1;
+}
+
+.docp-region--ok {
+  border-color: var(--success);
+  background: var(--success-pale);
+  opacity: 1;
 }
 
 /* ---------- Landing sections ---------- */
@@ -2217,37 +2433,19 @@ a.logo:focus-visible {
 }
 
 /* Below 1024px: no 3D; centred text, then the static fallback, then the dock as a legend. */
+/* 1024–1279px: same layout with 32px side margins (from .hero-pw padding). */
+/* Below 1024px: no tilt; the window stacks (document preview above the fields). */
 @media (max-width: 1023px) {
-  .hero-full {
-    height: auto;
-    min-height: 0;
+  .hero-pw {
     padding: calc(var(--navbar-height) + 72px) var(--space-2) var(--space-6);
   }
 
-  .hero-stage {
-    position: relative;
-    inset: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    max-width: 640px;
-    margin-top: var(--space-4);
-    pointer-events: auto;
+  .pw__body {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .hero-visual {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    height: 300px;
-    overflow: hidden;
-  }
-
-  .hero-dock-wrap {
-    position: static;
-    transform: none;
+  .pw-row {
+    grid-template-columns: 104px minmax(0, 1fr) 20px;
   }
 
   .steps-grid,
@@ -2271,14 +2469,9 @@ a.logo:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-visual__scene,
-  .hero-fallback,
-  .dock__tip {
+  .docp-region,
+  .pw-cursor svg {
     transition: none;
-  }
-
-  .hero-fallback__hand {
-    animation: none;
   }
 }
 

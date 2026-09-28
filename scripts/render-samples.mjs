@@ -106,7 +106,7 @@ function invoiceHtml(doc) {
   </table>
   <table class="totals">
     <tr><td>Subtotal</td><td>${num(s.subtotal)}</td></tr>
-    <tr><td>SST ${Math.round(s.sstRate * 100)}%</td><td>${num(s.sstAmount)}</td></tr>
+    <tr><td>${esc(s.taxLabel || `SST ${Math.round(s.sstRate * 100)}%`)}</td><td>${num(s.sstAmount)}</td></tr>
     <tr class="grand"><td>Total</td><td>RM ${num(s.total)}</td></tr>
   </table>
   <p class="foot">This is a computer-generated invoice. Sample document for the CukaiSmart prototype — fictional data.</p>
@@ -151,7 +151,7 @@ function receiptHtml(doc, time) {
   ${items}
   <hr>
   <p class="row"><span>Subtotal</span><span>${num(s.subtotal)}</span></p>
-  <p class="row"><span>SST ${Math.round(s.sstRate * 100)}%</span><span>${num(s.sstAmount)}</span></p>
+  <p class="row"><span>${esc(s.taxLabel || `SST ${Math.round(s.sstRate * 100)}%`)}</span><span>${num(s.sstAmount)}</span></p>
   <p class="row b big faded"><span>TOTAL</span><span>RM ${num(s.total)}</span></p>
   <hr>
   <p class="c b">TERIMA KASIH / THANK YOU</p>

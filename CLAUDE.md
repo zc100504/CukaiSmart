@@ -37,11 +37,9 @@ src/
 Premium, trustworthy, minimalist fintech with subtle AI elements. Plenty of white space, clean cards,
 simple icons. No excessive gradients, glows or complicated animations.
 
-**Exception:** The landing hero may use one 3D scene: two real hand images (AI robot hand and human hand) facing
-each other horizontally, and a paper invoice between them. It must stay calm and minimal, use only brand colours,
-and tell the product story. No glow, bloom or dark backgrounds. Centred full-screen hero: text on top, the AI hand
-entering from the left edge and the human hand from the right edge, the invoice floating in the centre between the
-fingertips, control dock (step buttons) at the bottom centre. The loop plays 3 times, then rests on the final frame.
+**Landing hero:** centred text above a product window showing the review screen, with a subtle CSS 3D tilt that
+flattens on scroll. The AI-and-human story animates inside the window (AI = teal scan, human = cursor confirming a
+field). No three.js in the hero. The story plays 3 times, then rests on the final frame.
 
 ### Colours
 | Token | Hex | Use |

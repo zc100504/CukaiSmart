@@ -266,6 +266,7 @@ export function buildDocument(spec) {
   const total = round2(subtotal + sstAmount);
 
   const source = {
+    taxLabel: spec.taxLabel || null,
     supplier,
     buyer,
     invoiceNo: spec.number,
@@ -304,6 +305,7 @@ export function buildDocument(spec) {
     const isLow = confidence < 75;
     return {
       ...def,
+      label: def.key === 'sstAmount' && spec.taxLabel ? spec.taxLabel : def.label,
       value: hasValue && !o.edited ? o.value : truth[def.key],
       originalValue: hasValue ? o.value : truth[def.key],
       confidence,
@@ -991,12 +993,20 @@ export const SAMPLE_DOCUMENTS = {
     label: 'Sample sales invoice',
     fileName: 'sample-sales-invoice-INV-2026-0418.png',
     src: '/samples/sample-sales-invoice.png',
-    fileSize: 95141, // bytes — update after re-running scripts/render-samples.mjs
+    fileSize: 102634, // bytes — update after re-running scripts/render-samples.mjs
     // A sales invoice is issued by the client, so this sample belongs to Ali Trading.
     clientId: 'c1',
     number: 'INV-2026-0418',
     date: '2026-09-28',
-    template: UPLOAD_TEMPLATES.sales[0],
+    // Services, so the 8% Service Tax is realistic. Same totals as before: 1,164.00 + 93.12 = 1,257.12.
+    party: parties.seriMurni,
+    lines: [
+      ['Kitchen equipment servicing', 1, 600.0],
+      ['Monthly maintenance contract', 2, 232.0],
+      ['Staff safety training', 1, 100.0],
+    ],
+    taxRate: 0.08,
+    taxLabel: 'Service Tax (8%)',
     classification: '022',
     preview: 'invoice',
     // Buyer TIN is printed faded on the image, which is why it is low confidence.
@@ -1029,7 +1039,7 @@ export const SAMPLE_DOCUMENTS = {
 /** Builds the exact document a sample file represents (also used to render the PNG). */
 export function buildSampleDocument(type, { id, client, uploadedAt, uploadedBy, status = 'processing' }) {
   const s = SAMPLE_DOCUMENTS[type];
-  const t = s.template;
+  const t = s.template || {};
   return buildDocument({
     id,
     clientId: client.id,
@@ -1038,9 +1048,10 @@ export function buildSampleDocument(type, { id, client, uploadedAt, uploadedBy, 
     status,
     number: s.number,
     date: s.date,
-    party: t.party,
-    lines: t.lines,
-    sstRate: (type === 'sales' ? client.sst : t.party.sst) ? 0.08 : 0,
+    party: s.party || t.party,
+    lines: s.lines || t.lines,
+    sstRate: s.taxRate ?? ((type === 'sales' ? client.sst : t.party.sst) ? 0.08 : 0),
+    taxLabel: s.taxLabel,
     category: t.category,
     classification: s.classification,
     preview: s.preview,
