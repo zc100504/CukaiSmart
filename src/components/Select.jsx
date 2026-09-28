@@ -8,6 +8,7 @@ export default function Select({
   error,
   options = [],
   placeholder,
+  hideLabel = false,
   required = false,
   id,
   className = '',
@@ -22,7 +23,7 @@ export default function Select({
   return (
     <div className={`field ${error ? 'field--error' : ''} ${className}`}>
       {label && (
-        <label className="field__label" htmlFor={selectId}>
+        <label className={hideLabel ? 'sr-only' : 'field__label'} htmlFor={selectId}>
           {label}
           {required && <span className="field__required" aria-hidden="true">*</span>}
         </label>

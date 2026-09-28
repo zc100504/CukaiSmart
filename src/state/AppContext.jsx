@@ -369,8 +369,23 @@ export function AppProvider({ children }) {
 
       addClient: (details) => {
         const { clients } = stateRef.current;
+        const tin = (details.tin || '').trim().toUpperCase();
+        if (!details.name?.trim()) return fail('Business name is required.');
+        if (!tin) return fail('TIN is required.');
+        const duplicate = clients.find((c) => c.tin.toUpperCase() === tin);
+        if (duplicate) return fail(`This TIN already belongs to ${duplicate.name}.`);
         const id = `c${clients.reduce((m, c) => Math.max(m, Number(c.id.slice(1)) || 0), 0) + 1}`;
-        const client = { sst: '', industry: '', contact: '', email: '', address: '', ...details, id };
+        const client = {
+          sst: '',
+          industry: '',
+          contact: '',
+          email: '',
+          address: '',
+          ...details,
+          name: details.name.trim(),
+          tin,
+          id,
+        };
         run({ type: 'ADD_CLIENT', client });
         return ok({ id });
       },

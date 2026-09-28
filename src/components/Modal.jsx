@@ -8,6 +8,9 @@ const FOCUSABLE =
 export default function Modal({ open, onClose, title, footer, size, children }) {
   const titleId = useId();
   const dialogRef = useRef(null);
+  // Latest onClose without re-running the focus effect on every parent render.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return undefined;
@@ -18,7 +21,7 @@ export default function Modal({ open, onClose, title, footer, size, children }) 
 
     const onKeyDown = (e) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab' || !dialog) return;
@@ -43,7 +46,7 @@ export default function Modal({ open, onClose, title, footer, size, children }) 
       document.body.style.overflow = prevOverflow;
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

@@ -1,14 +1,18 @@
 import { useId } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 
 /**
  * trailing: element shown inside the right edge of the input (e.g. a show/hide button).
  * labelAction: element shown at the right of the label row (e.g. "Forgot password?").
+ * warning: non-blocking amber message (ignored while an error is shown).
+ * hideLabel: keeps the label for screen readers only (e.g. search boxes).
  */
 export default function Input({
   label,
   helper,
   error,
+  warning,
+  hideLabel = false,
   required = false,
   icon: Icon,
   trailing,
@@ -21,18 +25,22 @@ export default function Input({
   const inputId = id || autoId;
   const helperId = `${inputId}-helper`;
   const errorId = `${inputId}-error`;
-  const describedBy = [error && errorId, helper && helperId].filter(Boolean).join(' ') || undefined;
+  const warningId = `${inputId}-warning`;
+  const showWarning = warning && !error;
+  const describedBy =
+    [error && errorId, showWarning && warningId, helper && helperId].filter(Boolean).join(' ') || undefined;
   const inputClasses = ['input', Icon && 'input--with-icon', trailing && 'input--with-trailing'].filter(Boolean).join(' ');
+  const fieldState = error ? 'field--error' : showWarning ? 'field--warning' : '';
 
   const labelEl = label && (
-    <label className="field__label" htmlFor={inputId}>
+    <label className={hideLabel ? 'sr-only' : 'field__label'} htmlFor={inputId}>
       {label}
       {required && <span className="field__required" aria-hidden="true">*</span>}
     </label>
   );
 
   return (
-    <div className={`field ${error ? 'field--error' : ''} ${className}`}>
+    <div className={`field ${fieldState} ${className}`}>
       {labelAction ? (
         <div className="field__label-row">
           {labelEl}
@@ -57,6 +65,12 @@ export default function Input({
         <p className="field__error" id={errorId}>
           <AlertCircle size={14} aria-hidden="true" />
           {error}
+        </p>
+      )}
+      {showWarning && (
+        <p className="field__warning" id={warningId}>
+          <AlertTriangle size={14} aria-hidden="true" />
+          {warning}
         </p>
       )}
       {helper && (

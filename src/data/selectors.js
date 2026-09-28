@@ -45,8 +45,9 @@ export function getDocSummary(doc) {
 // Compliance checks (recomputed from current field values)
 // ---------------------------------------------------------------------------
 
-const TIN_PATTERN = /^(C|IG)\d{11}$/;
-const BRN_PATTERN = /^\d{12}$/;
+export const TIN_PATTERN = /^(C|IG)\d{11}$/;
+export const BRN_PATTERN = /^\d{12}$/;
+export const SST_PATTERN = /^[A-Z]\d{2}-\d{4}-\d{8}$/;
 
 function check(id, label, passed, { blocking = true, fieldKey = null, pass, fail }) {
   return {
@@ -233,6 +234,88 @@ export function getReviewQueue(documents) {
       return a.doc.dueDate.localeCompare(b.doc.dueDate);
     })
     .map((x) => x.doc);
+}
+
+/**
+ * Per-client numbers for client cards. Built on countByStatus, so:
+ *  - completed      = dashboard "Completed" stat and tab
+ *  - needsAttention = needs-review + error = review queue = sidebar badge
+ *  - processing + needsAttention = dashboard "Pending"
+ */
+export function getClientStats(documents, clientId) {
+  const counts = countByStatus(getClientDocuments(documents, clientId));
+  return {
+    total: counts.total,
+    processing: counts.processing,
+    needsAttention: counts['needs-review'] + counts.error,
+    errors: counts.error,
+    completed: counts.completed,
+    pending: counts.pending,
+  };
+}
+
+/** docId -> most recent audit event for that document (the "Last edited" column). */
+export function getLastActivityMap(auditEvents) {
+  const map = {};
+  auditEvents.forEach((e) => {
+    if (!e.docId) return;
+    if (!map[e.docId] || e.at > map[e.docId].at) map[e.docId] = e;
+  });
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard / Records filtering and sorting
+// ---------------------------------------------------------------------------
+
+export const DOCUMENT_TABS = {
+  all: STATUS_ORDER,
+  pending: PENDING_STATUSES,
+  completed: COMPLETED_STATUSES,
+};
+
+/**
+ * @param {{ tab?: 'all'|'pending'|'completed', status?: string, type?: ''|'sales'|'purchase', query?: string }} f
+ */
+export function filterDocuments(documents, { tab = 'all', status = '', type = '', query = '' } = {}) {
+  const allowed = DOCUMENT_TABS[tab] || STATUS_ORDER;
+  const q = query.trim().toLowerCase();
+  return documents.filter((d) => {
+    if (!allowed.includes(d.status)) return false;
+    if (status && d.status !== status) return false;
+    if (type && d.type !== type) return false;
+    if (!q) return true;
+    const { number, counterparty } = getDocSummary(d);
+    return [number, counterparty, d.fileName].some((s) => String(s).toLowerCase().includes(q));
+  });
+}
+
+export const SORT_KEYS = ['document', 'type', 'uploaded', 'lastEdited', 'status'];
+
+/** Returns a new array. Ties fall back to newest upload first. */
+export function sortDocuments(documents, { key = 'lastEdited', dir = 'desc' } = {}, lastActivity = {}) {
+  const value = (d) => {
+    switch (key) {
+      case 'document':
+        return getDocSummary(d).number;
+      case 'type':
+        return d.type;
+      case 'uploaded':
+        return d.uploadedAt;
+      case 'status':
+        return STATUS_ORDER.indexOf(d.status);
+      default:
+        return lastActivity[d.id]?.at || d.uploadedAt;
+    }
+  };
+  const factor = dir === 'asc' ? 1 : -1;
+  return [...documents].sort((a, b) => {
+    const va = value(a);
+    const vb = value(b);
+    const cmp =
+      typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'en', { numeric: true, sensitivity: 'base' });
+    return cmp !== 0 ? cmp * factor : b.uploadedAt.localeCompare(a.uploadedAt);
+  });
 }
 
 /** Where a document should open, based on its workflow stage. */
