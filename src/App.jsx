@@ -3,6 +3,7 @@ import AppLayout from './components/AppLayout.jsx';
 import StyleGuide from './pages/StyleGuide.jsx';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
+import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Clients from './pages/Clients.jsx';
 import Upload from './pages/Upload.jsx';
@@ -21,6 +22,7 @@ export default function App() {
       {/* Public */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/style-guide" element={<StyleGuide />} />
 
       {/* Signed-in app (AppLayout redirects to /login when signed out) */}
