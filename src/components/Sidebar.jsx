@@ -12,7 +12,7 @@ export const NAV_ITEMS = [
 ];
 
 /** fixed: position fixed to the viewport (app shell). Off for inline previews. */
-export default function Sidebar({ fixed = true, counts = {} }) {
+export default function Sidebar({ fixed = true, counts = {}, footer = 'Prototype — sample data only' }) {
   return (
     <aside className={`sidebar ${fixed ? 'sidebar--fixed' : ''}`} aria-label="Main navigation">
       <div className="sidebar__brand">
@@ -31,7 +31,7 @@ export default function Sidebar({ fixed = true, counts = {} }) {
           </NavLink>
         ))}
       </nav>
-      <div className="sidebar__footer">Prototype — sample data only</div>
+      <div className="sidebar__footer">{footer}</div>
     </aside>
   );
 }

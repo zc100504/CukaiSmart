@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(git reset *)",
+      "Bash(npm run *)",
+      "Bash(npm start *)",
+      "Bash(npm start)",
+      "Bash(npx vite *)",
+      "Bash(npx vite)",
+      "Bash(vite *)",
+      "Bash(vite)"
+    ],
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(npm i *)"
+    ]
+  }
+}
