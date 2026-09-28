@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+  ArrowRight,
   Building2,
   CheckCircle2,
   FileCheck2,
-  PlayCircle,
   ScanText,
   ShieldCheck,
   Sparkles,
@@ -88,6 +88,7 @@ export default function Landing() {
   const reducedMotionRef = useRef(reducedMotion);
   reducedMotionRef.current = reducedMotion;
   const [demoOpen, setDemoOpen] = useState(false);
+  const heroTextRef = useRef(null);
 
   // Scroll to the section in the URL hash (or to the top for "/").
   useEffect(() => {
@@ -105,34 +106,35 @@ export default function Landing() {
 
   return (
     <div className="public-page">
-      <PublicNavbar sticky />
+      <PublicNavbar fixed />
 
       <main>
-        {/* ---------- Hero ---------- */}
-        <section className="hero" aria-labelledby="hero-title">
-          <div className="hero__text">
+        {/* ---------- Hero: centred text over a full-width 3D stage ---------- */}
+        <section className="hero-full" aria-labelledby="hero-title">
+          <div className="hero-full__text" ref={heroTextRef}>
             <p className="hero__pill">
               <span className="hero__pill-tag">New</span>
               Introducing Next-Gen AI Agent
             </p>
-            <h1 id="hero-title" className="text-display">
-              <span className="text-highlight-lg">AI Tax Agent</span> is ready to help Malaysia’s businesses
+            <h1 id="hero-title" className="text-display hero-full__title">
+              <span className="text-highlight-lg">AI Tax Agent</span> is ready to help
+              <br />
+              Malaysia’s businesses
             </h1>
-            <p className="hero__sub">
+            <p className="hero-full__sub">
               Get ready for e-Invoicing without the paperwork. Upload invoices and receipts, let AI extract and check
               the details, and approve MyInvois-ready records in minutes.
             </p>
-            <div className="row">
-              <Button to="/signup" size="lg">
+            <div className="row hero-full__actions">
+              <Button to="/signup" size="lg" pill>
                 Start Trial
               </Button>
-              <Button variant="secondary" size="lg" icon={PlayCircle} onClick={() => setDemoOpen(true)}>
+              <Button variant="secondary" size="lg" pill iconRight={ArrowRight} onClick={() => setDemoOpen(true)}>
                 Watch Demo
               </Button>
             </div>
-            <p className="text-caption">Free trial · No card needed · Prototype with sample data</p>
           </div>
-          <HeroVisual />
+          <HeroVisual textRef={heroTextRef} />
         </section>
 
         {/* ---------- How it works ---------- */}

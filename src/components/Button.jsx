@@ -11,6 +11,7 @@ export default function Button({
   icon: Icon,
   iconRight: IconRight,
   block = false,
+  pill = false,
   to,
   type = 'button',
   className = '',
@@ -22,6 +23,7 @@ export default function Button({
     `btn--${variant}`,
     size !== 'md' && `btn--${size}`,
     block && 'btn--block',
+    pill && 'btn--pill',
     className,
   ]
     .filter(Boolean)

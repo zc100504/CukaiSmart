@@ -39,7 +39,9 @@ simple icons. No excessive gradients, glows or complicated animations.
 
 **Exception:** The landing hero may use one 3D scene: two dot-matrix hands (AI and human) and a voxel invoice
 between them. It must stay calm and minimal, use only brand colours, and tell the product story.
-No glow, bloom or dark backgrounds.
+No glow, bloom or dark backgrounds. Centred full-screen hero: text on top, hands entering diagonally from the
+lower-left and lower-right corners, voxel invoice floating in the centre between the fingertips, control dock at
+the bottom centre.
 
 ### Colours
 | Token | Hex | Use |
@@ -94,7 +96,8 @@ Headings navy, body text dark. Teal highlights important words only, never whole
 | Exported | grey |
 
 ### Navigation
-- **Public pages** — top bar: logo left; Home, How It Works, Pricing, About, Log In; **Get Started** button right.
+- **Public pages** — top bar: logo left; Home, How It Works, Pricing, About centred in a pill; Log In link and
+  **Get Started** button right. On the landing page the bar is fixed, translucent white with backdrop blur.
 - **Signed-in app** — fixed left sidebar: Dashboard, Clients, Upload Document, Review Queue, Records, Settings.
   Top-right: notifications bell (with dropdown), active client switcher, user profile menu.
 

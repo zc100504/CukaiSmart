@@ -1,6 +1,8 @@
-// Lazy-loaded 3D hero: a navy dot-matrix AI hand and a teal human hand reaching toward a
-// voxel invoice that assembles, gets scanned, reviewed and marked MyInvois-ready.
-// Decorative: the wrapper in HeroVisual is aria-hidden; step controls live outside it.
+// Lazy-loaded 3D hero, full-width behind the centred text: a navy dot-matrix AI hand and a
+// teal human hand reach diagonally in from the lower corners toward a voxel invoice that
+// assembles, gets scanned, reviewed and marked MyInvois-ready.
+// Decorative: the canvas is aria-hidden and takes no pointer input; HeroVisual owns the
+// drag area and the control dock.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -8,17 +10,28 @@ import { ContactShadows } from '@react-three/drei/core/ContactShadows.js';
 import { PerformanceMonitor } from '@react-three/drei/core/PerformanceMonitor.js';
 import { loadHandCloud } from './handPoints.js';
 import { COLS, CUBE, PITCH, ROWS, buildInvoiceVoxels } from './voxelInvoice.js';
-import { FINAL_T, LOOP, STAGES, START_T, ease, stageAt, timeline } from './timeline.js';
+import { FINAL_T, LOOP, STAGES, START_T, ease, timeline } from './timeline.js';
 
-// ---- Layout (scene units) ----
-const CAMERA = { position: [0, 0.55, 7.2], fov: 32 };
-const HAND_TIP_GAP = 0.78; // fingertip x distance from centre
-const HAND_Y = 0.22;
-const INVOICE_Y = -0.02;
-const DRAG_LIMIT = { y: 0.44, x: 0.21 }; // ≈ ±25° sideways, ±12° up/down
+// ---- Composition (scene units at scale 1) ----
+const CAMERA = { position: [0, 0.4, 9], fov: 32 };
+const INVOICE_HALF_WIDTH = (COLS * PITCH) / 2;
+/** Gap between each fingertip and the invoice edge. */
+const TIP_GAP = 0.2;
+/** Fingertips point at the upper-middle of the invoice. */
+const TIP_Y_OFFSET = 0.12;
+/** Invoice + checkmark + shadow span about this height; its centre sits this far above the invoice centre. */
+const COMPOSITION_HEIGHT = 2.2;
+const COMPOSITION_OFFSET = 0.2;
+const SCALE_RANGE = [0.4, 1.2];
+/** Hands aim toward their corner, kept within this angle range (degrees above horizontal). */
+const HAND_ANGLE_RANGE = [20, 26];
+const HAND_SCALE_RANGE = [0.7, 2.8];
+/** Hands never grow beyond this multiple of the invoice scale, so they stay in proportion on short screens. */
+const HAND_TO_INVOICE_MAX = 2.4;
 
 const TOKENS = {
   navy: '--navy',
+  navyPale: '--navy-pale',
   teal: '--teal',
   card: '--card',
   surfaceMuted: '--surface-muted',
@@ -35,6 +48,43 @@ function readPalette() {
 }
 
 const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
+const deg = THREE.MathUtils.degToRad;
+
+/**
+ * Fits the composition into the free band between the text block and the dock.
+ * band: { top, bottom } in px from the top of the canvas (measured by HeroVisual).
+ */
+function computeLayout(viewport, size, band, clouds) {
+  const wpp = viewport.height / size.height; // world units per CSS pixel at z = 0
+  const topPx = band ? band.top : size.height * 0.5;
+  const bottomPx = band ? band.bottom : size.height * 0.9;
+  const availPx = Math.max(80, bottomPx - topPx);
+  const centerY = (size.height / 2 - (topPx + bottomPx) / 2) * wpp;
+
+  const s = clamp((availPx * wpp) / COMPOSITION_HEIGHT, SCALE_RANGE);
+  const invoiceY = centerY - COMPOSITION_OFFSET * s;
+  const tipX = (INVOICE_HALF_WIDTH + TIP_GAP) * s;
+  const tipY = invoiceY + TIP_Y_OFFSET * s;
+
+  // Aim each hand at its lower corner and make it long enough that the arm leaves the frame.
+  const dx = viewport.width / 2 - tipX;
+  const dy = tipY + viewport.height / 2;
+  const angle = deg(clamp(THREE.MathUtils.radToDeg(Math.atan2(dy, dx)), HAND_ANGLE_RANGE));
+  const dist = Math.hypot(dx, dy);
+  const handScale = (cloud) =>
+    Math.min(clamp(cloud ? (dist * 1.1) / cloud.reach : 1, HAND_SCALE_RANGE), s * HAND_TO_INVOICE_MAX);
+
+  return {
+    s,
+    invoiceY,
+    tipX,
+    tipY,
+    angle,
+    aiScale: handScale(clouds?.ai),
+    humanScale: handScale(clouds?.human),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Dot-matrix hand
@@ -44,13 +94,16 @@ const DOT_VERTEX = /* glsl */ `
   attribute float aSize;
   attribute float aShade;
   attribute float aTip;
+  attribute float aFade;
   uniform float uScale;
   uniform float uDot;
   uniform float uHighlight;
   varying float vShade;
   varying float vTip;
+  varying float vFade;
   void main() {
     vShade = aShade;
+    vFade = aFade;
     vTip = aTip * uHighlight;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     gl_PointSize = uDot * aSize * (1.0 + vTip * 0.2) * uScale / -mv.z;
@@ -64,20 +117,23 @@ const DOT_FRAGMENT = /* glsl */ `
   uniform float uOpacity;
   varying float vShade;
   varying float vTip;
+  varying float vFade;
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float alpha = 1.0 - smoothstep(0.4, 0.5, d);
     if (alpha <= 0.0) discard;
     vec3 col = mix(uColor * 0.8, uColor, vShade);
     col = mix(col, uLight, vTip * 0.45);
-    gl_FragColor = vec4(col, alpha * uOpacity);
+    gl_FragColor = vec4(col, alpha * uOpacity * vFade);
     #include <colorspace_fragment>
   }
 `;
 
-function HandCloud({ cloud, color, light, side, lowQuality, highlightRef, breathe }) {
+/** side 'left' = AI hand (points right), 'right' = human hand (points left). */
+function HandCloud({ cloud, color, light, side, lowQuality, highlightRef, breathe, layoutRef }) {
   const group = useRef();
   const material = useRef();
+  const dir = side === 'left' ? -1 : 1; // which side of the invoice the fingertip is on
 
   const geometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
@@ -85,6 +141,7 @@ function HandCloud({ cloud, color, light, side, lowQuality, highlightRef, breath
     g.setAttribute('aSize', new THREE.BufferAttribute(cloud.sizes, 1));
     g.setAttribute('aShade', new THREE.BufferAttribute(cloud.shades, 1));
     g.setAttribute('aTip', new THREE.BufferAttribute(cloud.tips, 1));
+    g.setAttribute('aFade', new THREE.BufferAttribute(cloud.fades, 1));
     return g;
   }, [cloud]);
   useEffect(() => () => geometry.dispose(), [geometry]);
@@ -107,20 +164,30 @@ function HandCloud({ cloud, color, light, side, lowQuality, highlightRef, breath
   );
 
   useFrame((state) => {
+    const L = layoutRef.current;
+    const scale = side === 'left' ? L.aiScale : L.humanScale;
     const u = material.current.uniforms;
     const px = state.size.height * state.viewport.dpr;
-    u.uScale.value = px / (2 * Math.tan(THREE.MathUtils.degToRad(CAMERA.fov / 2)));
-    u.uDot.value = cloud.spacing * (lowQuality ? 1.45 : 1.05);
+    u.uScale.value = px / (2 * Math.tan(deg(CAMERA.fov / 2)));
+    // Dot size follows the hand's scale so the dot-matrix density looks the same on every screen.
+    u.uDot.value = cloud.spacing * scale * (lowQuality ? 1.45 : 1.05);
     u.uHighlight.value = highlightRef.current;
+
+    // Rotate about the fingertip: AI hand tilts up to the right, human hand mirrors it.
     const t = breathe.current;
     const phase = side === 'left' ? 0 : Math.PI / 2;
-    group.current.scale.setScalar(1 + Math.sin(t * 0.9 + phase) * 0.012);
-    group.current.position.x = (side === 'left' ? -1 : 1) * (HAND_TIP_GAP + Math.sin(t * 0.6 + phase) * 0.015);
-    group.current.position.y = HAND_Y + Math.sin(t * 0.7 + phase) * 0.012;
+    const reachIn = Math.sin(t * 0.6 + phase) * 0.015 * L.s; // slow drift toward/away from the invoice
+    group.current.rotation.z = side === 'left' ? L.angle : -L.angle;
+    group.current.position.set(
+      dir * (L.tipX - reachIn * Math.cos(L.angle)),
+      L.tipY - reachIn * Math.sin(L.angle) + Math.sin(t * 0.7 + phase) * 0.01 * L.s,
+      0
+    );
+    group.current.scale.setScalar(scale * (1 + Math.sin(t * 0.9 + phase) * 0.012));
   });
 
   return (
-    <group ref={group} position={[(side === 'left' ? -1 : 1) * HAND_TIP_GAP, HAND_Y, 0]}>
+    <group ref={group}>
       <points geometry={geometry} frustumCulled={false}>
         <shaderMaterial
           ref={material}
@@ -150,8 +217,9 @@ function mulberry32(seed) {
   };
 }
 
-function VoxelInvoice({ palette, stateRef, dragRot, breathe }) {
-  const group = useRef();
+function VoxelInvoice({ palette, stateRef, dragRot, breathe, layoutRef }) {
+  const anchor = useRef(); // position + scale from the layout (no rotation)
+  const group = useRef(); // float + rotation
   const mesh = useRef();
   const material = useRef();
   const beam = useRef();
@@ -175,22 +243,30 @@ function VoxelInvoice({ palette, stateRef, dragRot, breathe }) {
 
   const reviewIdx = useMemo(() => cubes.flatMap((c, i) => (c.role === 'review' ? [i] : [])), [cubes]);
   const lastReview = useRef(-1);
-  const tmp = useMemo(
-    () => ({ obj: new THREE.Object3D(), color: new THREE.Color(), pos: new THREE.Vector3() }),
-    []
-  );
+  const tmp = useMemo(() => ({ obj: new THREE.Object3D(), color: new THREE.Color(), pos: new THREE.Vector3() }), []);
 
   // Base colours before the first frame, so the shader compiles with instance colours.
   useLayoutEffect(() => {
-    const colorFor = { paper: palette.card, paperShade: palette.surfaceMuted, flap: palette.border, ink: palette.navy, review: palette.navy, check: palette.success };
+    const colorFor = {
+      paper: palette.card,
+      paperShade: palette.surfaceMuted,
+      flap: palette.border,
+      ink: palette.navy,
+      review: palette.navy,
+      check: palette.success,
+    };
     cubes.forEach((c, i) => mesh.current.setColorAt(i, colorFor[c.role]));
     mesh.current.instanceColor.needsUpdate = true;
   }, [cubes, palette]);
 
   useFrame(() => {
     const s = stateRef.current;
+    const L = layoutRef.current;
     const { obj, pos } = tmp;
     const a = s.assemble * 1.5;
+
+    anchor.current.position.set(0, L.invoiceY, 0);
+    anchor.current.scale.setScalar(L.s);
 
     cubes.forEach((c, i) => {
       if (c.role === 'check') {
@@ -227,9 +303,9 @@ function VoxelInvoice({ palette, stateRef, dragRot, breathe }) {
     beamMat.current.opacity = 0.18 * s.beam.opacity;
     beamLineMat.current.opacity = 0.75 * s.beam.opacity;
 
-    // Slow rotation and float, plus the drag offset.
+    // Slow rotation and float, plus the viewer's drag angle.
     const t = breathe.current;
-    group.current.position.y = INVOICE_Y + Math.sin(t * 0.7) * 0.04;
+    group.current.position.y = Math.sin(t * 0.7) * 0.04;
     group.current.rotation.y = Math.sin(t * 0.35) * 0.16 + dragRot.current.y;
     group.current.rotation.x = -0.06 + dragRot.current.x;
   });
@@ -237,21 +313,32 @@ function VoxelInvoice({ palette, stateRef, dragRot, breathe }) {
   const width = COLS * PITCH;
 
   return (
-    <group ref={group} position={[0, INVOICE_Y, 0]}>
-      <instancedMesh ref={mesh} args={[null, null, cubes.length]} frustumCulled={false}>
-        <boxGeometry args={[CUBE, CUBE, CUBE]} />
-        <meshStandardMaterial ref={material} roughness={0.85} metalness={0} transparent />
-      </instancedMesh>
-      <group ref={beam} position={[0, 0, CUBE * 0.95]}>
-        <mesh renderOrder={2}>
-          <planeGeometry args={[width + 0.12, 0.18]} />
-          <meshBasicMaterial ref={beamMat} color={palette.teal} transparent depthWrite={false} toneMapped={false} />
-        </mesh>
-        <mesh renderOrder={3}>
-          <planeGeometry args={[width + 0.12, 0.012]} />
-          <meshBasicMaterial ref={beamLineMat} color={palette.teal} transparent depthWrite={false} toneMapped={false} />
-        </mesh>
+    <group ref={anchor}>
+      <group ref={group}>
+        <instancedMesh ref={mesh} args={[null, null, cubes.length]} frustumCulled={false}>
+          <boxGeometry args={[CUBE, CUBE, CUBE]} />
+          <meshStandardMaterial ref={material} roughness={0.7} metalness={0} transparent />
+        </instancedMesh>
+        <group ref={beam} position={[0, 0, CUBE * 0.95]}>
+          <mesh renderOrder={2}>
+            <planeGeometry args={[width + 0.12, 0.18]} />
+            <meshBasicMaterial ref={beamMat} color={palette.teal} transparent depthWrite={false} toneMapped={false} />
+          </mesh>
+          <mesh renderOrder={3}>
+            <planeGeometry args={[width + 0.12, 0.012]} />
+            <meshBasicMaterial ref={beamLineMat} color={palette.teal} transparent depthWrite={false} toneMapped={false} />
+          </mesh>
+        </group>
       </group>
+      <ContactShadows
+        position={[0, -1.08, 0]}
+        scale={3.2}
+        far={0.55}
+        blur={2.4}
+        opacity={0.2}
+        resolution={256}
+        color={palette.navy}
+      />
     </group>
   );
 }
@@ -260,11 +347,11 @@ function VoxelInvoice({ palette, stateRef, dragRot, breathe }) {
 // Scene
 // ---------------------------------------------------------------------------
 
-function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, dragTarget }) {
+function Scene({ pausedRef, lowQuality, controlRef, band, onStage, onReady, dragTarget }) {
   const palette = useMemo(readPalette, []);
   const [clouds, setClouds] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const { camera, invalidate } = useThree();
+  const { camera, invalidate, viewport, size } = useThree();
 
   const time = useRef(pausedRef.current ? FINAL_T : START_T);
   const breathe = useRef(0);
@@ -274,8 +361,20 @@ function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, d
   const stateRef = useRef(timeline(time.current));
   const aiTip = useRef(0);
   const humanTip = useRef(0);
+  const dragRot = useRef({ x: 0, y: 0 });
 
   if (loadError) throw loadError; // handled by SceneBoundary → static fallback
+
+  // Layout depends on canvas size and the measured free band.
+  const layout = useMemo(
+    () => computeLayout(viewport.getCurrentViewport(camera, [0, 0, 0], size), size, band, clouds),
+    [viewport, camera, size, band, clouds]
+  );
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
+  useEffect(() => {
+    invalidate();
+  }, [layout, invalidate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -287,7 +386,7 @@ function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, d
     };
   }, []);
 
-  // Step buttons jump the loop; while paused they show that step's still frame.
+  // Dock buttons jump the loop; while paused they show that step's still frame.
   useEffect(() => {
     controlRef.current = {
       jumpTo(index) {
@@ -323,15 +422,15 @@ function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, d
     aiTip.current = s.aiTip;
     humanTip.current = s.humanTip;
 
-    // Mouse parallax only while playing (paused means no automatic motion).
+    // Gentle mouse parallax only while playing (paused means no automatic motion).
     if (playing) {
       const k = 1 - Math.exp(-dt * 2.5);
-      camera.position.x = lerp(camera.position.x, pointer.current.x * 0.3, k);
-      camera.position.y = lerp(camera.position.y, CAMERA.position[1] + pointer.current.y * 0.15, k);
+      camera.position.x = lerp(camera.position.x, pointer.current.x * 0.25, k);
+      camera.position.y = lerp(camera.position.y, CAMERA.position[1] + pointer.current.y * 0.12, k);
     }
     camera.lookAt(0, 0, 0);
 
-    // Drag spring (rotates the invoice, springs back on release).
+    // Ease the invoice toward the drag angle (held after release; "Reset view" sets it back to 0).
     const spring = 1 - Math.exp(-dt * 9);
     dragRot.current.x = lerp(dragRot.current.x, dragTarget.current.x, spring);
     dragRot.current.y = lerp(dragRot.current.y, dragTarget.current.y, spring);
@@ -352,8 +451,10 @@ function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, d
 
   return (
     <>
-      <ambientLight intensity={1.3} />
-      <directionalLight position={[-3, 4, 5]} intensity={1.4} />
+      {/* Soft light only: sky/ground fill plus two directional lights, so faces shade as the invoice turns. */}
+      <hemisphereLight args={[palette.card, palette.navyPale, 0.9]} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[-3, 4, 5]} intensity={1.3} />
       <directionalLight position={[3, -1, 4]} intensity={0.35} />
 
       {clouds && (
@@ -366,6 +467,7 @@ function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, d
             lowQuality={lowQuality}
             highlightRef={aiTip}
             breathe={breathe}
+            layoutRef={layoutRef}
           />
           <HandCloud
             cloud={clouds.human}
@@ -375,21 +477,12 @@ function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, d
             lowQuality={lowQuality}
             highlightRef={humanTip}
             breathe={breathe}
+            layoutRef={layoutRef}
           />
         </>
       )}
 
-      <VoxelInvoice palette={palette} stateRef={stateRef} dragRot={dragRot} breathe={breathe} />
-
-      <ContactShadows
-        position={[0, -1.08, 0]}
-        scale={3.2}
-        far={0.55}
-        blur={2.4}
-        opacity={0.22}
-        resolution={256}
-        color={palette.navy}
-      />
+      <VoxelInvoice palette={palette} stateRef={stateRef} dragRot={dragRot} breathe={breathe} layoutRef={layoutRef} />
     </>
   );
 }
@@ -397,11 +490,13 @@ function Scene({ pausedRef, lowQuality, controlRef, onStage, onReady, dragRot, d
 /**
  * @param paused     true = no automatic motion (reduced motion starts paused; Pause button)
  * @param active     false = hero is off-screen: stop rendering
- * @param controlRef receives { jumpTo(stageIndex) }
+ * @param band       { top, bottom } px: free area between the text block and the dock
+ * @param dragTarget ref { x, y } — invoice drag angle, set by HeroVisual's drag area
+ * @param controlRef receives { jumpTo(stageIndex), invalidate() }
  * @param onStage    called when the loop enters a new step (0–3)
  * @param onReady    called once the hands have loaded and a frame has rendered
  */
-export default function HeroScene({ paused = false, active = true, controlRef, onStage, onReady }) {
+export default function HeroScene({ paused = false, active = true, band, dragTarget, controlRef, onStage, onReady }) {
   const [lowQuality, setLowQuality] = useState(false);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
@@ -410,65 +505,33 @@ export default function HeroScene({ paused = false, active = true, controlRef, o
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
 
-  const dragRot = useRef({ x: 0, y: 0 });
-  const dragTarget = useRef({ x: 0, y: 0 });
-  const drag = useRef(null);
-
   // Re-render one frame when pausing/unpausing so the still frame is current.
   useEffect(() => {
     controlRef.current?.invalidate?.();
   }, [paused, controlRef]);
 
-  const onPointerDown = (e) => {
-    if (e.button !== 0) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    drag.current = { x: e.clientX, y: e.clientY, w: e.currentTarget.clientWidth, h: e.currentTarget.clientHeight };
-  };
-  const onPointerMove = (e) => {
-    if (!drag.current) return;
-    const d = drag.current;
-    const clamp = (v, m) => Math.max(-m, Math.min(m, v));
-    dragTarget.current.y = clamp(((e.clientX - d.x) / d.w) * 1.6, DRAG_LIMIT.y);
-    dragTarget.current.x = clamp(((e.clientY - d.y) / d.h) * 0.9, DRAG_LIMIT.x);
-    controlRef.current?.invalidate?.();
-  };
-  const endDrag = () => {
-    drag.current = null;
-    dragTarget.current.x = 0;
-    dragTarget.current.y = 0;
-    controlRef.current?.invalidate?.();
-  };
-
   const frameloop = !active ? 'never' : paused ? 'demand' : 'always';
 
   return (
-    <div
-      className="hero-scene"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-      onLostPointerCapture={endDrag}
+    <Canvas
+      className="hero-canvas"
+      frameloop={frameloop}
+      dpr={lowQuality ? 1 : [1, 1.75]}
+      flat
+      camera={CAMERA}
+      gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
+      style={{ pointerEvents: 'none' }}
     >
-      <Canvas
-        className="hero-canvas"
-        frameloop={frameloop}
-        dpr={lowQuality ? 1 : [1, 1.75]}
-        flat
-        camera={CAMERA}
-        gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
-      >
-        <PerformanceMonitor onDecline={() => setLowQuality(true)} />
-        <Scene
-          pausedRef={pausedRef}
-          lowQuality={lowQuality}
-          controlRef={controlRef}
-          onStage={(i) => onStageRef.current?.(i)}
-          onReady={() => onReadyRef.current?.()}
-          dragRot={dragRot}
-          dragTarget={dragTarget}
-        />
-      </Canvas>
-    </div>
+      <PerformanceMonitor onDecline={() => setLowQuality(true)} />
+      <Scene
+        pausedRef={pausedRef}
+        lowQuality={lowQuality}
+        controlRef={controlRef}
+        band={band}
+        dragTarget={dragTarget}
+        onStage={(i) => onStageRef.current?.(i)}
+        onReady={() => onReadyRef.current?.()}
+      />
+    </Canvas>
   );
 }

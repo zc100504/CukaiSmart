@@ -31,6 +31,8 @@ export const DOT_DEPTH = 0.28;
 export const MIN_DOT_SIZE = 0.45;
 /** Dots within this distance of the fingertip brighten during the AI / review steps. */
 export const FINGERTIP_RADIUS = 0.3;
+/** The far end of the arm fades out over this share of its length (no hard cut if it stops short of the edge). */
+export const ARM_FADE = 0.25;
 
 export const HANDS = {
   ai: { src: '/hero/hand-ai.png', threshold: AI_BRIGHTNESS_THRESHOLD, crop: AI_CROP, pointsTo: 'right', tone: 1 },
@@ -126,7 +128,7 @@ function mulberry32(seed) {
 
 /**
  * @param {'ai'|'human'} key
- * @returns {Promise<{count, positions, sizes, shades, tips, spacing, placeholder}>}
+ * @returns {Promise<{count, positions, sizes, shades, tips, fades, spacing, reach, placeholder}>}
  *   Positions are relative to the fingertip (fingertip = 0,0,0). Points are shuffled,
  *   so drawing only the first half still covers the whole hand evenly.
  */
@@ -181,10 +183,13 @@ export async function loadHandCloud(key, { maxDots = MAX_DOTS_PER_HAND } = {}) {
   }
 
   const count = pts.length;
+  // How far the hand/arm extends behind the fingertip — used to size it so the arm reaches the corner.
+  const reach = pts.reduce((m, p) => Math.max(m, Math.abs(p.x - tip.x)), 0);
   const positions = new Float32Array(count * 3);
   const sizes = new Float32Array(count);
   const shades = new Float32Array(count);
   const tips = new Float32Array(count);
+  const fades = new Float32Array(count);
   pts.forEach((p, i) => {
     const x = p.x - tip.x;
     const y = p.y - tip.y;
@@ -195,8 +200,9 @@ export async function loadHandCloud(key, { maxDots = MAX_DOTS_PER_HAND } = {}) {
     shades[i] = p.b;
     const d = Math.hypot(x, y) / FINGERTIP_RADIUS;
     tips[i] = d < 1 ? (1 - d) * (1 - d) : 0;
+    fades[i] = Math.min(1, (reach - Math.abs(x)) / (reach * ARM_FADE));
   });
 
-  return { count, positions, sizes, shades, tips, spacing, placeholder };
+  return { count, positions, sizes, shades, tips, fades, spacing, reach, placeholder };
 }
 

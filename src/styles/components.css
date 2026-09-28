@@ -314,6 +314,10 @@ a.logo:focus-visible {
   font-size: var(--fs-body);
 }
 
+.btn--pill {
+  border-radius: var(--radius-pill);
+}
+
 .btn--block {
   width: 100%;
 }
@@ -1059,10 +1063,11 @@ a.logo:focus-visible {
 }
 
 /* ============ Public navbar ============ */
+/* Three columns so the link pill is centred on the page whatever the side widths. */
 .navbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
   height: var(--navbar-height);
   padding: 0 var(--space-4);
@@ -1070,25 +1075,34 @@ a.logo:focus-visible {
   border-bottom: 1px solid var(--border);
 }
 
+.navbar__brand {
+  display: flex;
+  justify-self: start;
+}
+
 .navbar__links {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  list-style: none;
+  gap: 4px;
   margin: 0;
-  padding: 0;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  list-style: none;
 }
 
 .navbar__link {
   display: inline-flex;
   align-items: center;
   height: 36px;
-  padding: 0 var(--space-1-5);
-  border-radius: var(--radius-md);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   color: var(--text);
   font-size: var(--fs-label);
   font-weight: var(--fw-medium);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .navbar__link:hover {
@@ -1099,6 +1113,7 @@ a.logo:focus-visible {
 .navbar__link.active {
   color: var(--navy);
   font-weight: var(--fw-semibold);
+  background: var(--navy-pale);
 }
 
 .navbar__link:focus-visible {
@@ -1109,7 +1124,37 @@ a.logo:focus-visible {
 .navbar__actions {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: var(--space-1);
+}
+
+/* Landing page: fixed, translucent, blurred; border appears after scrolling. */
+.navbar--fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom-color: transparent;
+  transition: border-color var(--transition);
+}
+
+.navbar--fixed.is-scrolled {
+  border-bottom-color: var(--border);
+}
+
+.navbar--fixed .navbar__links {
+  background: var(--surface-glass);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .navbar--fixed,
+  .navbar--fixed .navbar__links {
+    background: var(--card);
+  }
 }
 
 /* ============ Tabs ============ */
@@ -1719,12 +1764,6 @@ a.logo:focus-visible {
   flex: 1;
 }
 
-.navbar--sticky {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-
 .link-btn {
   padding: 0;
   border: none;
@@ -1745,22 +1784,43 @@ a.logo:focus-visible {
   box-shadow: var(--focus-ring);
 }
 
-/* ---------- Hero ---------- */
-.hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: var(--space-6);
-  align-items: center;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-4) 64px;
-}
-
-.hero__text {
+/* ---------- Hero: centred text over a full-width 3D stage ---------- */
+.hero-full {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  height: 100vh;
+  min-height: 720px;
+  padding: calc(var(--navbar-height) + 48px) var(--space-4) 0;
+  overflow: hidden;
+  background: var(--gradient-hero);
+  isolation: isolate;
+}
+
+.hero-full__text {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--space-3);
+  max-width: 760px;
+  text-align: center;
+}
+
+.hero-full__title {
+  margin: 0;
+}
+
+.hero-full__sub {
+  max-width: 640px;
+  font-size: var(--fs-body-lg);
+  color: var(--text-secondary);
+}
+
+.hero-full__actions {
+  justify-content: center;
 }
 
 .hero__pill {
@@ -1785,35 +1845,22 @@ a.logo:focus-visible {
   font-size: var(--fs-caption-sm);
 }
 
-/* Teal is allowed on large text (≥ 3:1). */
+/* Teal is allowed on large text (at least 3:1). */
 .text-highlight-lg {
   color: var(--teal);
 }
 
-.hero__sub {
-  max-width: 540px;
-  font-size: var(--fs-body-lg);
-  color: var(--text-secondary);
-}
-
-/* ---------- Hero visual (3D scene + static fallback) ---------- */
-.hero-visual-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  width: 100%;
+/* Stage: fills the hero behind the text. Only the drag area and the dock take pointer input. */
+.hero-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .hero-visual {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1.1 / 1;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  background: var(--gradient-hero);
-  box-shadow: var(--shadow-card);
-  pointer-events: none;
+  position: absolute;
+  inset: 0;
   user-select: none;
 }
 
@@ -1824,34 +1871,26 @@ a.logo:focus-visible {
   transition: opacity 500ms ease;
 }
 
-.hero-visual--live .hero-visual__scene {
+.hero-stage--live .hero-visual__scene {
   opacity: 1;
 }
 
-/* Only the live scene takes pointer input (drag to rotate); it never overlaps the hero text. */
-.hero-visual--live .hero-scene {
-  pointer-events: auto;
-  cursor: grab;
-  touch-action: pan-y;
-}
-
-.hero-visual--live .hero-scene:active {
-  cursor: grabbing;
-}
-
-.hero-scene,
 .hero-canvas {
   width: 100%;
   height: 100%;
 }
 
+/* Fallback fills the free band between text and dock; the hands overflow to the corners. */
 .hero-fallback {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: var(--band-top, 58%);
+  bottom: var(--band-bottom, 96px);
   transition: opacity 500ms ease;
 }
 
-.hero-visual--live .hero-fallback {
+.hero-stage--live .hero-fallback {
   opacity: 0;
 }
 
@@ -1859,82 +1898,155 @@ a.logo:focus-visible {
   display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
-/* Step indicator under the scene */
-.hero-steps {
+.hero-drag {
+  position: absolute;
+  top: var(--band-top);
+  bottom: var(--band-bottom);
+  left: 50%;
+  width: min(520px, 40%);
+  transform: translateX(-50%);
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+.hero-drag:active {
+  cursor: grabbing;
+}
+
+/* ---------- Control dock ---------- */
+.hero-dock-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-3);
+  z-index: 3;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.dock {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  box-shadow: var(--shadow-dropdown);
 }
 
-.hero-steps__list {
-  display: grid;
-  flex: 1;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-1);
+.dock__steps {
+  display: flex;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.hero-steps__step {
-  display: flex;
+.dock__item {
+  position: relative;
+  display: inline-flex;
+}
+
+.dock__btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 40px;
-  padding: 6px var(--space-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--card);
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
   color: var(--text-secondary);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-semibold);
-  text-align: center;
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-}
-
-button.hero-steps__step {
   cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-button.hero-steps__step:hover {
-  border-color: var(--border-input);
+.dock__btn:hover {
+  background: var(--bg);
   color: var(--navy);
 }
 
-button.hero-steps__step:focus-visible,
-.hero-steps__pause:focus-visible {
+.dock__btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
-.hero-steps__step.is-active {
-  border-color: var(--teal);
+.dock__btn.is-active {
   background: var(--teal-pale);
   color: var(--teal-text);
 }
 
-.hero-steps__icon {
-  display: inline-flex;
-  flex-shrink: 0;
+.dock__btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-.hero-steps__step.is-active .hero-steps__icon {
-  color: var(--teal);
+.dock__btn[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--text-secondary);
 }
 
-.hero-steps__label {
-  white-space: nowrap;
+.dock__divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: var(--border);
 }
 
-.hero-steps__pause {
-  flex-shrink: 0;
+/* Tooltip (visual only; each button already has an aria-label). */
+.dock__tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  padding: 4px var(--space-1);
   border: 1px solid var(--border);
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   background: var(--card);
+  box-shadow: var(--shadow-dropdown);
+  color: var(--text);
+  font-size: var(--fs-caption-sm);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.dock__item:hover .dock__tip,
+.dock__btn:focus-visible + .dock__tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Static legend (fallback / small screens) */
+.dock--legend {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px var(--space-1);
+  margin: 0;
+  padding: 6px var(--space-1-5);
+  list-style: none;
+}
+
+.dock__legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--space-1);
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+}
+
+.dock__legend.is-active {
+  background: var(--teal-pale);
+  color: var(--teal-text);
 }
 
 /* ---------- Landing sections ---------- */
@@ -2115,19 +2227,43 @@ button.hero-steps__step:focus-visible,
   color: var(--text-secondary);
 }
 
-/* Below 1024px: no 3D scene; the static fallback stacks under the hero text. */
+/* Below 1024px: no 3D; centred text, then the static fallback, then the dock as a legend. */
 @media (max-width: 1023px) {
-  .hero {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
+  .hero-full {
+    height: auto;
+    min-height: 0;
+    padding: calc(var(--navbar-height) + 72px) var(--space-2) var(--space-6);
   }
 
-  .hero-visual-wrap {
+  .hero-stage {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
     max-width: 640px;
+    margin-top: var(--space-4);
+    pointer-events: auto;
   }
 
-  .hero-steps__list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .hero-visual {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+  }
+
+  .hero-fallback {
+    top: var(--space-3);
+    bottom: var(--space-6);
+  }
+
+  .hero-dock-wrap {
+    position: static;
+    transform: none;
   }
 
   .steps-grid,
@@ -2137,15 +2273,23 @@ button.hero-steps__step:focus-visible,
   }
 
   .navbar {
-    flex-wrap: wrap;
+    grid-template-columns: 1fr auto;
     height: auto;
+    row-gap: var(--space-1);
     padding: var(--space-1-5) var(--space-2);
+  }
+
+  .navbar nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hero-visual__scene,
-  .hero-fallback {
+  .hero-fallback,
+  .dock__tip {
     transition: none;
   }
 }
