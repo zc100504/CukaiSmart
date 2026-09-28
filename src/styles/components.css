@@ -1797,15 +1797,22 @@ a.logo:focus-visible {
 }
 
 /* ---------- Hero visual (3D scene + static fallback) ---------- */
+.hero-visual-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
 .hero-visual {
   position: relative;
   width: 100%;
   aspect-ratio: 1.1 / 1;
   overflow: hidden;
+  border: 1px solid var(--border);
   border-radius: 24px;
-  background: var(--gradient-ai);
-  box-shadow: var(--shadow-modal);
-  container-type: inline-size;
+  background: var(--gradient-hero);
+  box-shadow: var(--shadow-card);
   pointer-events: none;
   user-select: none;
 }
@@ -1821,6 +1828,23 @@ a.logo:focus-visible {
   opacity: 1;
 }
 
+/* Only the live scene takes pointer input (drag to rotate); it never overlaps the hero text. */
+.hero-visual--live .hero-scene {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.hero-visual--live .hero-scene:active {
+  cursor: grabbing;
+}
+
+.hero-scene,
+.hero-canvas {
+  width: 100%;
+  height: 100%;
+}
+
 .hero-fallback {
   position: absolute;
   inset: 0;
@@ -1831,229 +1855,86 @@ a.logo:focus-visible {
   opacity: 0;
 }
 
-.hero-canvas {
+.hero-fallback__svg {
+  display: block;
   width: 100%;
   height: 100%;
 }
 
-/* Static fallback — sizes in container units so it scales with the panel. */
-.hf-paper {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: 1.1cqw;
-  border-radius: 1cqw;
-  background: var(--card);
-  box-shadow: var(--shadow-dropdown);
-  color: var(--text);
-}
-
-.hf-receipt {
-  left: 6.5%;
-  top: 29%;
-  width: 23%;
-  aspect-ratio: 0.477;
-  padding: 2.4cqw 2cqw;
-  transform: rotate(3deg);
-}
-
-.hf-invoice {
-  left: 17%;
-  top: 19%;
-  width: 39.6%;
-  aspect-ratio: 0.75;
-  padding: 3cqw;
-  transform: rotate(-1deg);
-}
-
-.hf-bar {
-  display: block;
-  height: 0.8cqw;
-  border-radius: var(--radius-pill);
-  background: var(--border);
-}
-
-.hf-bar--center {
-  align-self: center;
-}
-
-.hf-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1cqw;
-}
-
-.hf-dash {
-  width: 100%;
-  margin: 0.4cqw 0;
-  border: none;
-  border-top: 0.25cqw dashed var(--text-secondary);
-}
-
-.hf-receipt__shop {
-  font-size: 1.3cqw;
-  font-weight: var(--fw-bold);
-  text-align: center;
-}
-
-.hf-receipt__total,
-.hf-invoice__total {
-  font-size: 1.4cqw;
-  font-weight: var(--fw-bold);
-}
-
-.hf-receipt__total span:last-child,
-.hf-invoice__total span:last-child {
-  color: var(--navy);
-}
-
-.hf-invoice__total {
-  margin-top: auto;
-  padding-top: 1.2cqw;
-  border-top: 0.25cqw solid var(--navy);
-  font-size: 1.7cqw;
-}
-
-.hf-barcode {
-  height: 5cqw;
-  margin-top: auto;
-  background: repeating-linear-gradient(90deg, var(--navy) 0 0.35cqw, transparent 0.35cqw 0.7cqw, var(--navy) 0.7cqw 0.85cqw, transparent 0.85cqw 1.3cqw);
-}
-
-.hf-invoice__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 1cqw;
-  border-bottom: 0.25cqw solid var(--navy);
-}
-
-.hf-invoice__title {
-  font-size: 2.4cqw;
-  font-weight: var(--fw-bold);
-  color: var(--navy);
-}
-
-.hf-invoice__no {
-  font-size: 1.1cqw;
-  font-weight: var(--fw-semibold);
-}
-
-.hf-invoice__supplier {
-  font-size: 1.4cqw;
-  font-weight: var(--fw-semibold);
-}
-
-.hf-invoice__tin {
-  font-size: 1.2cqw;
-}
-
-.hf-invoice__tin span {
-  font-weight: var(--fw-semibold);
-  color: var(--text-secondary);
-}
-
-.hf-table-head {
-  height: 2.4cqw;
-  margin-top: 1cqw;
-  border-radius: 0.5cqw;
-  background: var(--surface-muted);
-}
-
-.hf-card {
-  position: absolute;
-  left: 62.5%;
-  top: 31%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.4cqw;
-  width: 32%;
-  padding: 2.2cqw 2.2cqw 1.8cqw;
-  border-radius: 1.2cqw;
-  background: var(--card);
-  box-shadow: var(--shadow-modal);
-  transform: rotate(0.5deg);
-}
-
-.hf-card__head {
+/* Step indicator under the scene */
+.hero-steps {
   display: flex;
   align-items: center;
-  gap: 1cqw;
+  gap: var(--space-1);
 }
 
-.hf-card__head > span:last-child {
+.hero-steps__list {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-steps__step {
   display: flex;
-  flex-direction: column;
-}
-
-.hf-card__check,
-.hf-chip__icon {
-  display: inline-flex;
-  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  color: var(--text-on-dark);
-}
-
-.hf-card__check {
-  width: 2.8cqw;
-  height: 2.8cqw;
-  background: var(--teal);
-}
-
-.hf-card__check svg,
-.hf-chip__icon svg {
-  width: 60%;
-  height: 60%;
-}
-
-.hf-card__title {
-  font-size: 1.9cqw;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
   font-weight: var(--fw-semibold);
+  text-align: center;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+button.hero-steps__step {
+  cursor: pointer;
+}
+
+button.hero-steps__step:hover {
+  border-color: var(--border-input);
   color: var(--navy);
 }
 
-.hf-card__sub {
-  font-size: 1.1cqw;
-  color: var(--text-secondary);
+button.hero-steps__step:focus-visible,
+.hero-steps__pause:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-.hf-chip {
-  display: flex;
-  align-items: center;
-  gap: 1cqw;
-  height: 5.2cqw;
-  padding: 0 1.6cqw 0 0.8cqw;
-  border: 0.2cqw solid var(--success);
-  border-radius: var(--radius-pill);
-  background: var(--success-pale);
-  color: var(--success-text);
-}
-
-.hf-chip__icon {
-  width: 3.2cqw;
-  height: 3.2cqw;
-  background: var(--success);
-}
-
-.hf-chip__label {
-  flex: 1;
-  font-size: 1.65cqw;
-  font-weight: var(--fw-semibold);
-}
-
-.hf-chip__state {
-  font-size: 1.05cqw;
-  font-weight: var(--fw-medium);
-}
-
-.hf-card__foot {
-  font-size: 1.1cqw;
-  font-weight: var(--fw-medium);
+.hero-steps__step.is-active {
+  border-color: var(--teal);
+  background: var(--teal-pale);
   color: var(--teal-text);
-  text-align: center;
+}
+
+.hero-steps__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.hero-steps__step.is-active .hero-steps__icon {
+  color: var(--teal);
+}
+
+.hero-steps__label {
+  white-space: nowrap;
+}
+
+.hero-steps__pause {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--card);
 }
 
 /* ---------- Landing sections ---------- */
@@ -2241,8 +2122,12 @@ a.logo:focus-visible {
     gap: var(--space-4);
   }
 
-  .hero-visual {
+  .hero-visual-wrap {
     max-width: 640px;
+  }
+
+  .hero-steps__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .steps-grid,

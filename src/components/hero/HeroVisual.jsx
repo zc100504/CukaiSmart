@@ -1,6 +1,8 @@
 import { Component, Suspense, lazy, useEffect, useRef, useState } from 'react';
 import useMediaQuery, { usePrefersReducedMotion } from '../useMediaQuery.js';
 import HeroFallback from './HeroFallback.jsx';
+import HeroSteps from './HeroSteps.jsx';
+import { STAGES } from './timeline.js';
 
 // three.js only downloads when the scene is actually going to run.
 const HeroScene = lazy(() => import('./HeroScene.jsx'));
@@ -88,14 +90,23 @@ class SceneBoundary extends Component {
 /**
  * Hero visual: static fallback first, then the 3D scene fades in over it when
  * the screen is ≥ 1024px, WebGL works and Inter has loaded.
+ * The step indicator sits outside the aria-hidden scene so it stays reachable.
  */
 export default function HeroVisual() {
   const ref = useRef(null);
+  const controlRef = useRef(null);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const reducedMotion = usePrefersReducedMotion();
   const [webgl, setWebgl] = useState(null);
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneFailed, setSceneFailed] = useState(false);
+  const [paused, setPaused] = useState(reducedMotion);
+  const [stage, setStage] = useState(STAGES.length - 1);
+
+  // Reduced motion starts (and switches to) paused; the viewer can still press Play.
+  useEffect(() => {
+    setPaused(reducedMotion);
+  }, [reducedMotion]);
 
   useEffect(() => {
     if (isDesktop && webgl === null) setWebgl(detectWebGL());
@@ -106,26 +117,44 @@ export default function HeroVisual() {
   const runScene = isDesktop && webgl === true && fonts === 'ready' && !sceneFailed;
 
   useEffect(() => {
-    if (!runScene) setSceneReady(false);
+    if (!runScene) {
+      setSceneReady(false);
+      setStage(STAGES.length - 1);
+    }
   }, [runScene]);
 
+  const live = runScene && sceneReady;
+
   return (
-    <div ref={ref} className={`hero-visual ${runScene && sceneReady ? 'hero-visual--live' : ''}`} aria-hidden="true">
-      <HeroFallback />
-      {runScene && (
-        <SceneBoundary onError={() => setSceneFailed(true)}>
-          <Suspense fallback={null}>
-            <div className="hero-visual__scene">
-              <HeroScene
-                key={reducedMotion ? 'still' : 'loop'}
-                animate={!reducedMotion}
-                active={inView}
-                onReady={() => setSceneReady(true)}
-              />
-            </div>
-          </Suspense>
-        </SceneBoundary>
-      )}
+    <div className="hero-visual-wrap">
+      <div ref={ref} className={`hero-visual ${live ? 'hero-visual--live' : ''}`} aria-hidden="true">
+        <HeroFallback />
+        {runScene && (
+          <SceneBoundary onError={() => setSceneFailed(true)}>
+            <Suspense fallback={null}>
+              <div className="hero-visual__scene">
+                <HeroScene
+                  paused={paused}
+                  active={inView}
+                  controlRef={controlRef}
+                  onStage={setStage}
+                  onReady={() => setSceneReady(true)}
+                />
+              </div>
+            </Suspense>
+          </SceneBoundary>
+        )}
+      </div>
+      <HeroSteps
+        stage={live ? stage : STAGES.length - 1}
+        interactive={live}
+        paused={paused}
+        onSelect={(i) => {
+          setStage(i);
+          controlRef.current?.jumpTo(i);
+        }}
+        onTogglePause={() => setPaused((p) => !p)}
+      />
     </div>
   );
 }

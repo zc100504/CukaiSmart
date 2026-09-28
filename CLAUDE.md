@@ -37,8 +37,9 @@ src/
 Premium, trustworthy, minimalist fintech with subtle AI elements. Plenty of white space, clean cards,
 simple icons. No excessive gradients, glows or complicated animations.
 
-**Exception:** The landing hero may use one 3D scene. It must stay calm and minimal, use only brand colours,
-and tell the product story.
+**Exception:** The landing hero may use one 3D scene: two dot-matrix hands (AI and human) and a voxel invoice
+between them. It must stay calm and minimal, use only brand colours, and tell the product story.
+No glow, bloom or dark backgrounds.
 
 ### Colours
 | Token | Hex | Use |

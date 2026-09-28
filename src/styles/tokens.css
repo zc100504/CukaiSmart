@@ -40,6 +40,8 @@
 
   /* ---------- Gradient (landing hero + AI processing only) ---------- */
   --gradient-ai: linear-gradient(135deg, var(--navy) 0%, var(--teal) 100%);
+  /* Pale version — landing hero panel only, so navy and teal dots stay visible on it. */
+  --gradient-hero: linear-gradient(135deg, var(--navy-pale) 0%, var(--teal-pale) 100%);
 
   /* ---------- Typography ---------- */
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
