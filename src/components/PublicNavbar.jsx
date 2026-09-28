@@ -1,27 +1,34 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import Logo from './Logo.jsx';
 import Button from './Button.jsx';
 
-const SECTION_LINKS = [
-  { to: '/#how-it-works', label: 'How It Works' },
-  { to: '/#pricing', label: 'Pricing' },
-  { to: '/#about', label: 'About' },
+export const SECTION_LINKS = [
+  { id: 'how-it-works', label: 'How It Works' },
+  { id: 'pricing', label: 'Pricing' },
+  { id: 'about', label: 'About' },
 ];
 
-export default function PublicNavbar() {
+/** Section links go to "/#id"; the landing page scrolls to the section (smoothly unless reduced motion). */
+export default function PublicNavbar({ sticky = false }) {
+  const { pathname, hash } = useLocation();
+  const onHome = pathname === '/';
+
   return (
-    <header className="navbar">
+    <header className={`navbar ${sticky ? 'navbar--sticky' : ''}`}>
       <Logo to="/" />
       <nav aria-label="Primary">
         <ul className="navbar__links">
           <li>
-            <NavLink to="/" end className="navbar__link">
+            <NavLink to="/" end className={() => `navbar__link ${onHome && !hash ? 'active' : ''}`}>
               Home
             </NavLink>
           </li>
           {SECTION_LINKS.map((l) => (
-            <li key={l.label}>
-              <Link to={l.to} className="navbar__link">
+            <li key={l.id}>
+              <Link
+                to={{ pathname: '/', hash: `#${l.id}` }}
+                className={`navbar__link ${onHome && hash === `#${l.id}` ? 'active' : ''}`}
+              >
                 {l.label}
               </Link>
             </li>
@@ -34,7 +41,7 @@ export default function PublicNavbar() {
         </ul>
       </nav>
       <div className="navbar__actions">
-        <Button to="/login">Get Started</Button>
+        <Button to="/signup">Get Started</Button>
       </div>
     </header>
   );

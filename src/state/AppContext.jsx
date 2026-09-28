@@ -103,6 +103,24 @@ function reducer(state, action) {
         message: `Signed in as ${action.email || state.user.email}`,
       });
 
+    case 'SIGNUP': {
+      const { name, email, company, accountType } = action;
+      const user = {
+        ...state.user,
+        name,
+        email,
+        displayName: name.trim().split(/\s+/)[0],
+        accountType,
+        role: accountType === 'firm' ? 'Firm administrator' : 'Business owner',
+      };
+      const next = { ...state, auth: { loggedIn: true }, user, business: { ...state.business, name: company } };
+      return withEvent(next, meta, {
+        actor: user.displayName,
+        action: 'signup',
+        message: `Created ${accountType === 'firm' ? 'Accounting firm' : 'SME'} account for ${company}`,
+      });
+    }
+
     case 'LOGOUT':
       return withEvent({ ...state, auth: { loggedIn: false } }, meta, { action: 'logout', message: 'Signed out' });
 
@@ -327,6 +345,14 @@ export function AppProvider({ children }) {
     () => ({
       login: (email) => {
         run({ type: 'LOGIN', email });
+        return ok();
+      },
+
+      /** @param {{ name, email, company, accountType: 'sme'|'firm' }} details */
+      signup: ({ name, email, company, accountType }) => {
+        if (!name?.trim() || !email?.trim() || !company?.trim()) return fail('Name, email and company are required.');
+        if (!['sme', 'firm'].includes(accountType)) return fail('Choose an account type.');
+        run({ type: 'SIGNUP', name: name.trim(), email: email.trim(), company: company.trim(), accountType });
         return ok();
       },
 
