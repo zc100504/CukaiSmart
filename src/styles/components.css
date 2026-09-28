@@ -1791,8 +1791,8 @@ a.logo:focus-visible {
   flex-direction: column;
   align-items: center;
   height: 100vh;
-  min-height: 720px;
-  padding: calc(var(--navbar-height) + 48px) var(--space-4) 0;
+  min-height: 760px; /* keep in sync with HERO_MIN_HEIGHT in hero/stage.js */
+  padding: calc(var(--navbar-height) + clamp(24px, 4vh, 56px)) var(--space-4) 0;
   overflow: hidden;
   background: var(--gradient-hero);
   isolation: isolate;
@@ -1804,7 +1804,7 @@ a.logo:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-1-5);
   max-width: 760px;
   text-align: center;
 }
@@ -1813,14 +1813,16 @@ a.logo:focus-visible {
   margin: 0;
 }
 
+/* --grey-text keeps the subtitle above 4.5:1 on the pale gradient. */
 .hero-full__sub {
   max-width: 640px;
   font-size: var(--fs-body-lg);
-  color: var(--text-secondary);
+  color: var(--grey-text);
 }
 
 .hero-full__actions {
   justify-content: center;
+  margin-top: var(--space-1);
 }
 
 .hero__pill {
@@ -1845,9 +1847,9 @@ a.logo:focus-visible {
   font-size: var(--fs-caption-sm);
 }
 
-/* Teal is allowed on large text (at least 3:1). */
+/* Hero highlight: darker teal so it stays above 4.5:1 on the pale gradient. */
 .text-highlight-lg {
-  color: var(--teal);
+  color: var(--teal-text-strong);
 }
 
 /* Stage: fills the hero behind the text. Only the drag area and the dock take pointer input. */
@@ -1880,13 +1882,10 @@ a.logo:focus-visible {
   height: 100%;
 }
 
-/* Fallback fills the free band between text and dock; the hands overflow to the corners. */
+/* Fallback covers the hero with the same 1440 × 900 stage as the 3D scene. */
 .hero-fallback {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--band-top, 58%);
-  bottom: var(--band-bottom, 96px);
+  inset: 0;
   transition: opacity 500ms ease;
 }
 
@@ -1901,13 +1900,20 @@ a.logo:focus-visible {
   overflow: visible;
 }
 
+/* Hand images fade in once loaded (the invoice is already there). */
+.hero-fallback__hand {
+  animation: hero-hand-in 400ms ease both;
+}
+
+@keyframes hero-hand-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Positioned inline over the invoice (from hero/stage.js). */
 .hero-drag {
   position: absolute;
-  top: var(--band-top);
-  bottom: var(--band-bottom);
-  left: 50%;
-  width: min(520px, 40%);
-  transform: translateX(-50%);
   pointer-events: auto;
   cursor: grab;
   touch-action: none;
@@ -1921,7 +1927,7 @@ a.logo:focus-visible {
 .hero-dock-wrap {
   position: absolute;
   left: 50%;
-  bottom: var(--space-3);
+  bottom: var(--space-2); /* 16px */
   z-index: 3;
   transform: translateX(-50%);
   pointer-events: auto;
@@ -1978,23 +1984,6 @@ a.logo:focus-visible {
 .dock__btn.is-active {
   background: var(--teal-pale);
   color: var(--teal-text);
-}
-
-.dock__btn[aria-disabled="true"] {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.dock__btn[aria-disabled="true"]:hover {
-  background: transparent;
-  color: var(--text-secondary);
-}
-
-.dock__divider {
-  width: 1px;
-  height: 24px;
-  margin: 0 4px;
-  background: var(--border);
 }
 
 /* Tooltip (visual only; each button already has an aria-label). */
@@ -2256,11 +2245,6 @@ a.logo:focus-visible {
     overflow: hidden;
   }
 
-  .hero-fallback {
-    top: var(--space-3);
-    bottom: var(--space-6);
-  }
-
   .hero-dock-wrap {
     position: static;
     transform: none;
@@ -2291,6 +2275,10 @@ a.logo:focus-visible {
   .hero-fallback,
   .dock__tip {
     transition: none;
+  }
+
+  .hero-fallback__hand {
+    animation: none;
   }
 }
 

@@ -3,6 +3,7 @@ import useMediaQuery, { usePrefersReducedMotion } from '../useMediaQuery.js';
 import HeroFallback from './HeroFallback.jsx';
 import HeroSteps from './HeroSteps.jsx';
 import { STAGES } from './timeline.js';
+import { referenceLayout, stageTransform, toScreen } from './stage.js';
 
 // three.js only downloads when the scene is actually going to run.
 const HeroScene = lazy(() => import('./HeroScene.jsx'));
@@ -87,53 +88,57 @@ class SceneBoundary extends Component {
   }
 }
 
-const DRAG_LIMIT = { y: 0.44, x: 0.21 }; // ≈ ±25° sideways, ±12° up/down
+const DRAG_LIMIT = { y: 0.44, x: 0.21 }; // ≈ ±25° sideways, ±12° up/down; springs back on release
+const DRAG_PADDING = 40; // px around the invoice that also starts a drag
 const clampTo = (v, m) => Math.max(-m, Math.min(m, v));
 
 /**
- * Measures the free band between the hero text and the dock (px from the top of the stage),
- * so the 3D scene and the fallback can fit the invoice and hands inside it.
+ * Hero size (for the stage transform) and the text block's rectangle relative to it.
+ * The rectangle is only used to mask hand dots behind the text — sizing is proportional (stage.js).
  */
-function useFreeBand(stageRef, textRef, dockRef, enabled) {
-  const [band, setBand] = useState(null);
+function useHeroGeometry(stageRef, textRef, enabled) {
+  const [geo, setGeo] = useState(null);
 
   useLayoutEffect(() => {
     if (!enabled) return undefined;
     const measure = () => {
       const stage = stageRef.current?.getBoundingClientRect();
       const text = textRef?.current?.getBoundingClientRect();
-      const dock = dockRef.current?.getBoundingClientRect();
-      if (!stage || !text || !dock) return;
+      if (!stage) return;
       const next = {
-        top: Math.round(text.bottom - stage.top + 24),
-        bottom: Math.round(dock.top - stage.top - 16),
+        width: Math.round(stage.width),
         height: Math.round(stage.height),
+        text: text
+          ? {
+              left: Math.round(text.left - stage.left),
+              top: Math.round(text.top - stage.top),
+              right: Math.round(text.right - stage.left),
+              bottom: Math.round(text.bottom - stage.top),
+            }
+          : null,
       };
-      setBand((prev) =>
-        prev && prev.top === next.top && prev.bottom === next.bottom && prev.height === next.height ? prev : next
-      );
+      setGeo((prev) => (prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
     };
     measure();
     const ro = new ResizeObserver(measure);
-    [stageRef.current, textRef?.current, dockRef.current].forEach((el) => el && ro.observe(el));
+    [stageRef.current, textRef?.current].forEach((el) => el && ro.observe(el));
     window.addEventListener('resize', measure);
     return () => {
       ro.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [stageRef, textRef, dockRef, enabled]);
+  }, [stageRef, textRef, enabled]);
 
-  return band;
+  return geo;
 }
 
 /**
  * Full-hero stage behind the centred text: the 3D scene (or its static fallback),
  * a drag area over the invoice, and the control dock at the bottom centre.
- * textRef: the hero text block, so the scene never overlaps it.
+ * textRef: the hero text block — hand dots fade behind it.
  */
 export default function HeroVisual({ textRef }) {
   const stageRef = useRef(null);
-  const dockRef = useRef(null);
   const controlRef = useRef(null);
   const dragTarget = useRef({ x: 0, y: 0 });
   const drag = useRef(null);
@@ -143,13 +148,12 @@ export default function HeroVisual({ textRef }) {
   const [webgl, setWebgl] = useState(null);
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneFailed, setSceneFailed] = useState(false);
-  const [paused, setPaused] = useState(reducedMotion);
+  // Resting = no automatic motion: reduced motion, after 3 loops, or after a step click.
+  const [resting, setResting] = useState(reducedMotion);
   const [stage, setStage] = useState(STAGES.length - 1);
-  const [dragged, setDragged] = useState(false);
 
-  // Reduced motion starts (and switches to) paused; the viewer can still press Play.
   useEffect(() => {
-    setPaused(reducedMotion);
+    if (reducedMotion) setResting(true);
   }, [reducedMotion]);
 
   useEffect(() => {
@@ -158,7 +162,7 @@ export default function HeroVisual({ textRef }) {
 
   const fonts = useFontsReady(isDesktop && webgl === true);
   const inView = useInView(stageRef, isDesktop);
-  const band = useFreeBand(stageRef, textRef, dockRef, isDesktop);
+  const geo = useHeroGeometry(stageRef, textRef, isDesktop);
   const runScene = isDesktop && webgl === true && fonts === 'ready' && !sceneFailed;
 
   useEffect(() => {
@@ -170,50 +174,56 @@ export default function HeroVisual({ textRef }) {
 
   const live = runScene && sceneReady;
 
-  // ---- Drag to tilt the invoice (angle holds after release; "Reset view" eases it back) ----
+  // Drag area = the invoice's rectangle on screen (from the proportional stage) plus padding.
+  let dragStyle;
+  if (geo) {
+    const t = stageTransform(geo.width, geo.height);
+    const { invoice } = referenceLayout();
+    const c = toScreen({ x: invoice.cx, y: invoice.cy }, t);
+    const w = invoice.w * t.s + DRAG_PADDING * 2;
+    const h = invoice.h * t.s + DRAG_PADDING * 2;
+    dragStyle = { left: c.x - w / 2, top: c.y - h / 2, width: w, height: h };
+  }
+
+  // ---- Drag to tilt the invoice; it springs back to the default angle on release ----
   const onPointerDown = (e) => {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     const rect = e.currentTarget.getBoundingClientRect();
-    drag.current = { x: e.clientX, y: e.clientY, w: rect.width, h: rect.height, start: { ...dragTarget.current } };
+    drag.current = { x: e.clientX, y: e.clientY, w: rect.width, h: rect.height };
   };
   const onPointerMove = (e) => {
     const d = drag.current;
     if (!d) return;
-    dragTarget.current.y = clampTo(d.start.y + ((e.clientX - d.x) / d.w) * 1.2, DRAG_LIMIT.y);
-    dragTarget.current.x = clampTo(d.start.x + ((e.clientY - d.y) / d.h) * 0.7, DRAG_LIMIT.x);
+    dragTarget.current.y = clampTo(((e.clientX - d.x) / d.w) * 1.2, DRAG_LIMIT.y);
+    dragTarget.current.x = clampTo(((e.clientY - d.y) / d.h) * 0.7, DRAG_LIMIT.x);
     controlRef.current?.invalidate?.();
   };
   const endDrag = () => {
     if (!drag.current) return;
     drag.current = null;
-    setDragged(Math.abs(dragTarget.current.x) > 0.01 || Math.abs(dragTarget.current.y) > 0.01);
-  };
-  const resetView = () => {
     dragTarget.current.x = 0;
     dragTarget.current.y = 0;
-    setDragged(false);
     controlRef.current?.invalidate?.();
   };
 
-  const bandStyle = band ? { '--band-top': `${band.top}px`, '--band-bottom': `${band.height - band.bottom}px` } : undefined;
-
   return (
-    <div ref={stageRef} className={`hero-stage ${live ? 'hero-stage--live' : ''}`} style={bandStyle}>
+    <div ref={stageRef} className={`hero-stage ${live ? 'hero-stage--live' : ''}`}>
       <div className="hero-visual" aria-hidden="true">
-        <HeroFallback />
+        <HeroFallback compact={!isDesktop} heroWidth={geo?.width} heroHeight={geo?.height} />
         {runScene && (
           <SceneBoundary onError={() => setSceneFailed(true)}>
             <Suspense fallback={null}>
               <div className="hero-visual__scene">
                 <HeroScene
-                  paused={paused}
+                  resting={resting}
                   active={inView}
-                  band={band}
+                  textRect={geo?.text}
                   dragTarget={dragTarget}
                   controlRef={controlRef}
                   onStage={setStage}
                   onReady={() => setSceneReady(true)}
+                  onRest={() => setResting(true)}
                 />
               </div>
             </Suspense>
@@ -221,9 +231,10 @@ export default function HeroVisual({ textRef }) {
         )}
       </div>
 
-      {live && (
+      {live && dragStyle && (
         <div
           className="hero-drag"
+          style={dragStyle}
           aria-hidden="true"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -233,18 +244,16 @@ export default function HeroVisual({ textRef }) {
         />
       )}
 
-      <div ref={dockRef} className="hero-dock-wrap">
+      <div className="hero-dock-wrap">
         <HeroSteps
           stage={live ? stage : STAGES.length - 1}
           interactive={live}
-          paused={paused}
-          canReset={dragged}
           onSelect={(i) => {
+            // Jump to the step and hold it there (stops the loop).
             setStage(i);
+            setResting(true);
             controlRef.current?.jumpTo(i);
           }}
-          onTogglePause={() => setPaused((p) => !p)}
-          onReset={resetView}
         />
       </div>
     </div>

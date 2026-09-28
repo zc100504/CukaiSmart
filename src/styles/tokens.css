@@ -33,6 +33,7 @@
 
   /* ---------- Accessible text shades (≥ 4.5:1 on white) ---------- */
   --teal-text: #017A7B;
+  --teal-text-strong: #016B6C; /* teal text on the pale hero gradient (≥ 4.5:1) */
   --warning-text: #92400E;
   --gold-text: #7A5A0F;
   --success-text: #15803D;

@@ -1,38 +1,16 @@
 import { useRef } from 'react';
-import { BadgeCheck, Pause, Play, RotateCcw, ScanText, Upload, UserCheck } from 'lucide-react';
+import { BadgeCheck, ScanText, Upload, UserCheck } from 'lucide-react';
 import { STAGES } from './timeline.js';
 
 const ICONS = { upload: Upload, extract: ScanText, review: UserCheck, ready: BadgeCheck };
 
-function DockButton({ label, icon: Icon, active, disabled, pressed, onClick, onKeyDown, buttonRef }) {
-  return (
-    <span className="dock__item">
-      <button
-        ref={buttonRef}
-        type="button"
-        className={`dock__btn ${active ? 'is-active' : ''}`}
-        aria-label={label}
-        aria-current={active ? 'step' : undefined}
-        aria-pressed={pressed}
-        aria-disabled={disabled || undefined}
-        onClick={disabled ? undefined : onClick}
-        onKeyDown={onKeyDown}
-      >
-        <Icon size={18} aria-hidden="true" />
-      </button>
-      <span className="dock__tip" aria-hidden="true">
-        {label}
-      </span>
-    </span>
-  );
-}
-
 /**
- * Control dock at the bottom centre of the hero.
- * interactive: icon buttons (4 steps | Pause/Play, Reset view) with tooltips; arrow keys move across them.
+ * Control dock at the bottom centre of the hero: the 4 loop steps.
+ * interactive: icon buttons with tooltips; clicking jumps to a step and holds it (this also
+ * stops the loop). Arrow keys move across the buttons.
  * Otherwise a static legend with visible labels (while the static fallback is showing).
  */
-export default function HeroSteps({ stage, interactive, paused, canReset, onSelect, onTogglePause, onReset }) {
+export default function HeroSteps({ stage, interactive, onSelect }) {
   const refs = useRef([]);
 
   if (!interactive) {
@@ -51,52 +29,43 @@ export default function HeroSteps({ stage, interactive, paused, canReset, onSele
     );
   }
 
-  // Arrow keys move focus across the dock (Reset view stays focusable while unavailable).
-  const onKeyDown = (e) => {
-    const buttons = refs.current.filter(Boolean);
-    const i = buttons.indexOf(e.currentTarget);
+  const onKeyDown = (e, i) => {
     let next = null;
-    if (e.key === 'ArrowRight') next = (i + 1) % buttons.length;
-    else if (e.key === 'ArrowLeft') next = (i - 1 + buttons.length) % buttons.length;
+    if (e.key === 'ArrowRight') next = (i + 1) % STAGES.length;
+    else if (e.key === 'ArrowLeft') next = (i - 1 + STAGES.length) % STAGES.length;
     else if (e.key === 'Home') next = 0;
-    else if (e.key === 'End') next = buttons.length - 1;
+    else if (e.key === 'End') next = STAGES.length - 1;
     if (next === null) return;
     e.preventDefault();
-    buttons[next].focus();
+    refs.current[next]?.focus();
   };
 
   return (
-    <div className="dock" role="toolbar" aria-label="Hero animation controls">
-      <ol className="dock__steps" aria-label="How CukaiSmart works">
-        {STAGES.map((s, i) => (
-          <li key={s.key}>
-            <DockButton
-              buttonRef={(el) => (refs.current[i] = el)}
-              label={s.label}
-              icon={ICONS[s.key]}
-              active={i === stage}
-              onClick={() => onSelect(i)}
-              onKeyDown={onKeyDown}
-            />
-          </li>
-        ))}
+    <div className="dock">
+      <ol className="dock__steps" aria-label="How CukaiSmart works — choose a step to show it">
+        {STAGES.map((s, i) => {
+          const Icon = ICONS[s.key];
+          const active = i === stage;
+          return (
+            <li key={s.key} className="dock__item">
+              <button
+                ref={(el) => (refs.current[i] = el)}
+                type="button"
+                className={`dock__btn ${active ? 'is-active' : ''}`}
+                aria-label={s.label}
+                aria-current={active ? 'step' : undefined}
+                onClick={() => onSelect(i)}
+                onKeyDown={(e) => onKeyDown(e, i)}
+              >
+                <Icon size={18} aria-hidden="true" />
+              </button>
+              <span className="dock__tip" aria-hidden="true">
+                {s.label}
+              </span>
+            </li>
+          );
+        })}
       </ol>
-      <span className="dock__divider" aria-hidden="true" />
-      <DockButton
-        buttonRef={(el) => (refs.current[STAGES.length] = el)}
-        label={paused ? 'Play animation' : 'Pause animation'}
-        icon={paused ? Play : Pause}
-        onClick={onTogglePause}
-        onKeyDown={onKeyDown}
-      />
-      <DockButton
-        buttonRef={(el) => (refs.current[STAGES.length + 1] = el)}
-        label="Reset view"
-        icon={RotateCcw}
-        disabled={!canReset}
-        onClick={onReset}
-        onKeyDown={onKeyDown}
-      />
     </div>
   );
 }

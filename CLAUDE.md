@@ -37,11 +37,11 @@ src/
 Premium, trustworthy, minimalist fintech with subtle AI elements. Plenty of white space, clean cards,
 simple icons. No excessive gradients, glows or complicated animations.
 
-**Exception:** The landing hero may use one 3D scene: two dot-matrix hands (AI and human) and a voxel invoice
-between them. It must stay calm and minimal, use only brand colours, and tell the product story.
-No glow, bloom or dark backgrounds. Centred full-screen hero: text on top, hands entering diagonally from the
-lower-left and lower-right corners, voxel invoice floating in the centre between the fingertips, control dock at
-the bottom centre.
+**Exception:** The landing hero may use one 3D scene: two real hand images (AI robot hand and human hand) facing
+each other horizontally, and a paper invoice between them. It must stay calm and minimal, use only brand colours,
+and tell the product story. No glow, bloom or dark backgrounds. Centred full-screen hero: text on top, the AI hand
+entering from the left edge and the human hand from the right edge, the invoice floating in the centre between the
+fingertips, control dock (step buttons) at the bottom centre. The loop plays 3 times, then rests on the final frame.
 
 ### Colours
 | Token | Hex | Use |
