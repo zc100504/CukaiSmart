@@ -2,10 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import {
   AI_ACTOR,
   DOCUMENT_TYPES,
+  SAMPLE_DOCUMENTS,
   STATE_VERSION,
   buildUploadedDocument,
   createSeedState,
   formatFieldValue,
+  getSampleClient,
 } from '../data/mock-data.js';
 import { nowLocalISO } from '../data/format.js';
 import {
@@ -141,18 +143,21 @@ function reducer(state, action) {
         message: `Added client ${action.client.name}`,
       });
 
-    case 'UPLOAD_DOCUMENT': {
-      const { doc } = action;
-      const next = {
+    case 'UPLOAD_DOCUMENTS': {
+      const { docs } = action;
+      let next = {
         ...state,
-        documents: [doc, ...state.documents],
-        usage: { ...state.usage, used: state.usage.used + 1 },
+        documents: [...docs, ...state.documents],
+        usage: { ...state.usage, used: state.usage.used + docs.length },
       };
-      return withEvent(next, meta, {
-        ...docEvent(doc),
-        action: 'uploaded',
-        message: `Uploaded ${doc.fileName} as ${DOCUMENT_TYPES[doc.type]}`,
+      docs.forEach((doc, i) => {
+        next = withEvent(next, { ...meta, id: `${meta.id}-${i}` }, {
+          ...docEvent(doc),
+          action: 'uploaded',
+          message: `Uploaded ${doc.fileName} as ${DOCUMENT_TYPES[doc.type]}${doc.sampleImage ? ' (demo sample)' : ''}`,
+        });
       });
+      return next;
     }
 
     case 'FINISH_PROCESSING': {
@@ -390,25 +395,48 @@ export function AppProvider({ children }) {
         return ok({ id });
       },
 
-      /** @param {{ clientId, type: 'sales'|'purchase', fileName, fileSize }} upload */
-      uploadDocument: ({ clientId, type, fileName, fileSize }) => {
+      /**
+       * Creates one or more documents with status Processing and adds them to pooled usage.
+       * Accepts a single upload or an array (a batch gets sequential ids in one state update).
+       * @param {{ clientId, type: 'sales'|'purchase', fileName, fileSize, sample?: boolean } | Array} input
+       * @returns {{ ok, ids, id }} id = first document's id
+       */
+      uploadDocument: (input) => {
         const s = stateRef.current;
-        const client = s.clients.find((c) => c.id === (clientId || s.activeClientId));
-        if (!client) return fail('Choose a client first.');
-        if (!DOCUMENT_TYPES[type]) return fail('Choose a document type.');
-        if (s.usage.used >= s.usage.limit) return fail('Pooled document limit reached for this billing period.');
-        const doc = buildUploadedDocument({
-          id: nextDocumentId(s.documents),
-          client,
-          type,
-          fileName,
-          fileSize,
-          uploadedAt: nowLocalISO(),
-          uploadedBy: s.user.displayName,
-          sequence: s.documents.length,
-        });
-        run({ type: 'UPLOAD_DOCUMENT', doc });
-        return ok({ id: doc.id });
+        const items = Array.isArray(input) ? input : [input];
+        if (items.length === 0) return fail('Add at least one file.');
+        if (s.usage.used + items.length > s.usage.limit) {
+          return fail(`Only ${s.usage.limit - s.usage.used} documents left in this billing period.`);
+        }
+
+        const uploadedAt = nowLocalISO();
+        const firstNumber = Number(nextDocumentId(s.documents).slice(1));
+        const docs = [];
+        for (const [i, item] of items.entries()) {
+          const client = s.clients.find((c) => c.id === (item.clientId || s.activeClientId));
+          if (!client) return fail('Choose a client first.');
+          if (!DOCUMENT_TYPES[item.type]) return fail('Choose a document type.');
+          const sample = item.sample ? SAMPLE_DOCUMENTS[item.type] : null;
+          if (sample?.clientId && sample.clientId !== client.id) {
+            return fail(`The sample sales invoice was issued by ${getSampleClient(s.clients)?.name}. Upload it for that client.`);
+          }
+          docs.push(
+            buildUploadedDocument({
+              id: `d${firstNumber + i}`,
+              client,
+              type: item.type,
+              fileName: item.fileName,
+              fileSize: item.fileSize,
+              uploadedAt,
+              uploadedBy: s.user.displayName,
+              sequence: s.documents.length + i,
+              sample: Boolean(sample),
+            })
+          );
+        }
+        run({ type: 'UPLOAD_DOCUMENTS', docs });
+        const ids = docs.map((d) => d.id);
+        return ok({ ids, id: ids[0] });
       },
 
       finishProcessing: (docId) => {

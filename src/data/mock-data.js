@@ -336,6 +336,8 @@ export function buildDocument(spec) {
     submittedAt: spec.status === 'submitted' ? spec.doneAt : null,
     submissionRef: spec.submissionRef || null,
     destination: spec.type === 'sales' ? 'MyInvois (sandbox — simulated)' : 'Accounting records (CSV export)',
+    // Set for demo sample files so the review screen can show the real image.
+    sampleImage: spec.sampleImage || null,
   };
   return doc;
 }
@@ -976,10 +978,91 @@ const UPLOAD_TEMPLATES = {
   ],
 };
 
+// ---------------------------------------------------------------------------
+// Demo sample files (public/samples/*.png)
+// Each PNG is rendered from buildSampleDocument() by scripts/render-samples.mjs,
+// so the image and the extracted data always match exactly.
+// Built on the first template of each type, with a fixed number and date.
+// ---------------------------------------------------------------------------
+
+export const SAMPLE_DOCUMENTS = {
+  sales: {
+    key: 'sales',
+    label: 'Sample sales invoice',
+    fileName: 'sample-sales-invoice-INV-2026-0418.png',
+    src: '/samples/sample-sales-invoice.png',
+    fileSize: 95141, // bytes — update after re-running scripts/render-samples.mjs
+    // A sales invoice is issued by the client, so this sample belongs to Ali Trading.
+    clientId: 'c1',
+    number: 'INV-2026-0418',
+    date: '2026-09-28',
+    template: UPLOAD_TEMPLATES.sales[0],
+    classification: '022',
+    preview: 'invoice',
+    // Buyer TIN is printed faded on the image, which is why it is low confidence.
+    overrides: {
+      buyerTin: { confidence: 62, reason: 'Faded text' },
+      invoiceDate: { confidence: 83 },
+    },
+  },
+  purchase: {
+    key: 'purchase',
+    label: 'Sample thermal receipt',
+    fileName: 'sample-receipt-MJ-7802.png',
+    src: '/samples/sample-receipt.png',
+    fileSize: 49725, // bytes — update after re-running scripts/render-samples.mjs
+    // Receipts don't name the buyer, so any client can record this purchase.
+    clientId: null,
+    number: 'MJ-7802',
+    date: '2026-09-28',
+    time: '10:42',
+    template: UPLOAD_TEMPLATES.purchase[0],
+    preview: 'receipt',
+    // The total is printed faded on the thermal receipt.
+    overrides: {
+      total: { confidence: 66, reason: 'Faded thermal print' },
+      invoiceDate: { confidence: 80 },
+    },
+  },
+};
+
+/** Builds the exact document a sample file represents (also used to render the PNG). */
+export function buildSampleDocument(type, { id, client, uploadedAt, uploadedBy, status = 'processing' }) {
+  const s = SAMPLE_DOCUMENTS[type];
+  const t = s.template;
+  return buildDocument({
+    id,
+    clientId: client.id,
+    own: toParty(client),
+    type,
+    status,
+    number: s.number,
+    date: s.date,
+    party: t.party,
+    lines: t.lines,
+    sstRate: (type === 'sales' ? client.sst : t.party.sst) ? 0.08 : 0,
+    category: t.category,
+    classification: s.classification,
+    preview: s.preview,
+    fileName: s.fileName,
+    fileSize: s.fileSize,
+    uploadedAt,
+    uploadedBy,
+    sampleImage: s.src,
+    overrides: s.overrides,
+  });
+}
+
+export const getSampleClient = (clients) => clients.find((c) => c.id === SAMPLE_DOCUMENTS.sales.clientId);
+
 /**
- * @param {{ id, client, type, fileName, fileSize, uploadedAt, uploadedBy, sequence }} meta
+ * @param {{ id, client, type, fileName, fileSize, uploadedAt, uploadedBy, sequence, sample? }} meta
+ * sample: true = one of SAMPLE_DOCUMENTS; its data matches the PNG exactly.
  */
 export function buildUploadedDocument(meta) {
+  if (meta.sample) {
+    return buildSampleDocument(meta.type, meta);
+  }
   const templates = UPLOAD_TEMPLATES[meta.type];
   const t = templates[meta.sequence % templates.length];
   const { client } = meta;

@@ -199,44 +199,37 @@ textarea {
 }
 
 /* ============ Logo ============ */
+/*
+ * public/LOGO.png is 1104 × 371 with transparent padding; the artwork sits at
+ * x 55–1024, y 80–283 (970 × 204). --logo-h is the visible artwork height; the
+ * negative margins trim the padding so the logo aligns like a normal element.
+ */
 .logo {
+  --logo-h: 32px;
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
+  flex-shrink: 0;
+  height: var(--logo-h);
+  overflow: hidden;
+  border-radius: var(--radius-sm);
   text-decoration: none;
-  color: var(--navy);
 }
 
-.logo__mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-md);
-  background: var(--navy);
-  color: var(--teal);
+.logo--lg {
+  --logo-h: 48px;
 }
 
-.logo__word {
-  font-size: 20px;
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.01em;
-  color: var(--navy);
+.logo__img {
+  display: block;
+  height: calc(var(--logo-h) * 371 / 204);
+  width: auto;
+  max-width: none;
+  margin: calc(var(--logo-h) * -80 / 204) calc(var(--logo-h) * -79 / 204) calc(var(--logo-h) * -87 / 204)
+    calc(var(--logo-h) * -55 / 204);
 }
 
-.logo__word span {
-  color: var(--teal-text);
-}
-
-.logo--lg .logo__mark {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-lg);
-}
-
-.logo--lg .logo__word {
-  font-size: var(--fs-h1);
+a.logo:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 /* ============ Buttons ============ */
@@ -2656,6 +2649,160 @@ textarea {
   font-size: var(--fs-label);
   font-weight: var(--fw-semibold);
   color: var(--navy);
+}
+
+/* ============ Upload ============ */
+.upload-page {
+  max-width: 920px;
+}
+
+.choice--tall {
+  align-items: flex-start;
+}
+
+.choice--tall .choice__icon {
+  margin-top: 2px;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3);
+  border: 2px dashed var(--border-input);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  text-align: center;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.dropzone--over {
+  border-color: var(--teal);
+  background: var(--teal-pale);
+}
+
+.dropzone__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--teal-pale);
+  color: var(--teal);
+}
+
+.dropzone--over .dropzone__icon {
+  background: var(--card);
+}
+
+.dropzone__actions {
+  justify-content: center;
+  margin-top: var(--space-1);
+}
+
+.dropzone__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-1);
+  font-size: var(--fs-caption-sm);
+  color: var(--text-secondary);
+}
+
+.alert__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert__list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: var(--fs-caption);
+}
+
+.upload-queue {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upload-queue__empty {
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.upload-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.upload-item__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--navy-pale);
+  color: var(--navy);
+}
+
+.upload-item__thumb {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  object-position: top;
+  background: var(--card);
+}
+
+.upload-item__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.upload-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.upload-item__name {
+  overflow: hidden;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.upload-item__done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--success-text);
+}
+
+.chip--type {
+  background: var(--navy-pale);
+  color: var(--navy);
+}
+
+.upload-footer {
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* ============ Style guide page ============ */

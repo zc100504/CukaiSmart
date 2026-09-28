@@ -143,6 +143,7 @@ export default function Dashboard() {
             value={usage.used}
             max={usage.limit}
             label="Pooled usage"
+            hideLabel
             showValue={false}
           />
           <p className="stat__meta">

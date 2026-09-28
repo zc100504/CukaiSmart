@@ -312,7 +312,7 @@ export default function StyleGuide() {
         </nav>
 
         <main className="sg-main">
-          <Section id="logo" title="Logo" description="Text wordmark in navy with a small teal check mark.">
+          <Section id="logo" title="Logo" description="Network icon with the CukaiSmart wordmark (public/LOGO.png). Large on auth pages, standard in the navbar and sidebar.">
             <Card>
               <div className="row sg-logo-row">
                 <Logo to={null} size="lg" />
