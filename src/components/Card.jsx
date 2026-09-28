@@ -25,7 +25,7 @@ export default function Card({
           {actions && <div className="row-sm">{actions}</div>}
         </div>
       )}
-      <div className="card__body">{children}</div>
+      {children ? <div className="card__body">{children}</div> : <div className="card__spacer" />}
       {footer && <div className="card__footer">{footer}</div>}
     </Tag>
   );

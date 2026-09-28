@@ -25,7 +25,10 @@ import ProgressSteps from '../components/ProgressSteps.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import PublicNavbar from '../components/PublicNavbar.jsx';
 import { useToast } from '../components/Toast.jsx';
-import { clients, documents, formatDate, formatRM } from '../data/mock-data.js';
+import { useApp } from '../state/AppContext.jsx';
+import { formatDate, formatRM } from '../data/format.js';
+import { getDocSummary } from '../data/selectors.js';
+import { DOCUMENT_TYPES } from '../data/mock-data.js';
 
 const SECTIONS = [
   ['logo', 'Logo'],
@@ -265,16 +268,22 @@ function MiniReview() {
 
 export default function StyleGuide() {
   const toast = useToast();
+  const { clients, documents, user } = useApp();
   const [modalOpen, setModalOpen] = useState(false);
-  const [email, setEmail] = useState('razak@alitrading.my');
+  const [email, setEmail] = useState(user.email);
   const [agree, setAgree] = useState(true);
 
+  // One sample row per status.
+  const sampleRows = ['processing', 'needs-review', 'ready', 'error', 'submitted', 'exported']
+    .map((s) => documents.find((d) => d.status === s))
+    .filter(Boolean);
+
   const tableColumns = [
-    { key: 'number', header: 'Document', render: (d) => <span className="text-label">{d.number}</span> },
+    { key: 'number', header: 'Document', render: (d) => <span className="text-label">{getDocSummary(d).number}</span> },
     { key: 'client', header: 'Client', render: (d) => clients.find((c) => c.id === d.clientId)?.name },
-    { key: 'type', header: 'Type', render: (d) => (d.type === 'sales' ? 'Sales e-Invoice' : 'Purchase receipt') },
-    { key: 'date', header: 'Date', render: (d) => formatDate(d.date) },
-    { key: 'total', header: 'Amount', align: 'right', render: (d) => formatRM(d.total) },
+    { key: 'type', header: 'Type', render: (d) => DOCUMENT_TYPES[d.type] },
+    { key: 'date', header: 'Date', render: (d) => formatDate(getDocSummary(d).date) },
+    { key: 'total', header: 'Amount', align: 'right', render: (d) => formatRM(getDocSummary(d).total) },
     { key: 'status', header: 'Status', render: (d) => <Badge status={d.status} /> },
   ];
 
@@ -541,8 +550,8 @@ export default function StyleGuide() {
           <Section id="table" title="Table">
             <Card
               flush
-              title="Recent documents"
-              subtitle="Sample data"
+              title="Sample documents"
+              subtitle="One per status"
               actions={
                 <Button size="sm" icon={Plus}>
                   Upload
@@ -552,9 +561,9 @@ export default function StyleGuide() {
               <div className="sg-table-gap" />
               <Table
                 columns={tableColumns}
-                rows={documents}
+                rows={sampleRows}
                 caption="Recent documents"
-                onRowClick={(d) => toast.info(d.number, 'Rows open the audit trail in Records.')}
+                onRowClick={(d) => toast.info(getDocSummary(d).number, 'Rows open the audit trail in Records.')}
               />
             </Card>
           </Section>
