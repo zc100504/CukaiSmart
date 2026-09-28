@@ -1,0 +1,103 @@
+/* CukaiSmart design tokens — the only place hex values live. */
+:root {
+  /* ---------- Brand colours ---------- */
+  --navy: #003787;
+  --navy-hover: #002B6B;
+  --navy-pale: #E6EDF7;
+  --teal: #02A1A2;
+  --teal-pale: #E6F6F6;
+  --gold: #DDAE42;
+  --gold-pale: #FBF4E3;
+
+  /* ---------- Surfaces & text ---------- */
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --text: #0F172A;
+  --text-secondary: #64748B;
+  --text-on-dark: #FFFFFF;
+  --border: #D2E4EC;
+  --border-input: #A9C3CF;
+  --surface-muted: #F1F5F9;
+  --overlay: rgba(15, 23, 42, 0.45);
+
+  /* ---------- Semantic ---------- */
+  --success: #15803D;
+  --success-pale: #E8F5EC;
+  --warning: #D97706;
+  --warning-pale: #FEF3E2;
+  --error: #DC2626;
+  --error-pale: #FDECEC;
+  --grey: #64748B;
+  --grey-pale: #EEF2F6;
+
+  /* ---------- Accessible text shades (≥ 4.5:1 on white) ---------- */
+  --teal-text: #017A7B;
+  --warning-text: #92400E;
+  --gold-text: #7A5A0F;
+  --success-text: #15803D;
+  --error-text: #B91C1C;
+  --grey-text: #475569;
+
+  /* ---------- Gradient (landing hero + AI processing only) ---------- */
+  --gradient-ai: linear-gradient(135deg, var(--navy) 0%, var(--teal) 100%);
+
+  /* ---------- Typography ---------- */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  --fs-display: 48px;   /* Landing headline */
+  --fs-h1: 32px;        /* Page title */
+  --fs-h2: 22px;        /* Section heading */
+  --fs-h3: 16px;        /* Card heading */
+  --fs-body-lg: 16px;   /* Body */
+  --fs-body: 15px;      /* Body */
+  --fs-label: 14px;     /* Button / label */
+  --fs-caption: 13px;   /* Caption / helper */
+  --fs-caption-sm: 12px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.2;
+  --lh-snug: 1.35;
+  --lh-body: 1.55;
+
+  /* ---------- Spacing ---------- */
+  --space-0-5: 4px;
+  --space-1: 8px;
+  --space-1-5: 12px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-dropdown: 0 4px 16px rgba(15, 23, 42, 0.10);
+  --shadow-modal: 0 16px 48px rgba(15, 23, 42, 0.18);
+
+  /* ---------- Focus ---------- */
+  --focus-ring: 0 0 0 3px rgba(2, 161, 162, 0.45);
+  --focus-outline: 2px solid var(--teal);
+
+  /* ---------- Layout ---------- */
+  --sidebar-width: 240px;
+  --topbar-height: 64px;
+  --navbar-height: 72px;
+  --content-padding: 32px;
+  --content-max: 1200px;
+  --input-height: 44px;
+  --button-height: 40px;
+
+  /* ---------- Motion ---------- */
+  --transition-fast: 120ms ease;
+  --transition: 200ms ease;
+}
