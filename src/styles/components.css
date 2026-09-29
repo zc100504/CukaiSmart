@@ -2131,10 +2131,10 @@ a.logo:focus-visible {
   top: 50%;
 }
 
-/* Level with the top rows, partly outside the right edge (below the status chip, above the TIN row). */
+/* Just below the status chip, partly outside the right edge; the shield sits below it. */
 .pw-card--audit {
   right: -72px;
-  top: 21%;
+  top: 13%;
 }
 
 /* Narrower screens: less room beside the window, and depth pushes the cards outward — tuck them in. */

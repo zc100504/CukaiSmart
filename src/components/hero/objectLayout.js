@@ -8,12 +8,12 @@
 export const VIEWPORT_MARGIN = 8;
 
 export const OBJECTS = {
-  /** Thermal receipt — lower-left corner, in front of the window (moves most with parallax). */
-  receipt: { anchor: { x: -0.02, y: 0.84 }, width: 0.066, height: 0.15, depth: 1.4, tilt: -0.22 },
-  /** RM coin — just outside the upper-right corner, above the status chip. */
-  coin: { anchor: { x: 1.0, y: 0 }, offset: { x: 40, y: -40 }, size: 0.085, depth: 0.8 },
-  /** Shield with check — lower-right corner, beside the (empty) right side of the panel footer. */
-  shield: { anchor: { x: 1.0, y: 0.8 }, offset: { x: 10, y: 0 }, size: 0.08, depth: 1.2 },
+  /** Thermal receipt — beside the left edge, high enough to be seen above the fold (in front, moves most with parallax). */
+  receipt: { anchor: { x: -0.02, y: 0.22 }, width: 0.066, height: 0.15, depth: 1.4, tilt: -0.22 },
+  /** RM coin — small, at the lower-right corner, beside the empty right end of the panel footer. */
+  coin: { anchor: { x: 1.0, y: 0.95 }, offset: { x: 18, y: 0 }, size: 0.06, depth: 0.8 },
+  /** Shield with check — beside the right edge, below the audit card and above the flagged TIN row. */
+  shield: { anchor: { x: 1.0, y: 0.34 }, offset: { x: 10, y: 0 }, size: 0.08, depth: 1.2 },
 };
 
 /**
