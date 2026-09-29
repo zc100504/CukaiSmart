@@ -25,6 +25,13 @@ export const EXPENSE_CATEGORIES = [
   'Pantry supplies',
 ];
 
+/** Tax treatments used by the mock documents (labels match what is printed on the document). */
+export const TAX = {
+  sales10: { sstRate: 0.1, taxLabel: 'Sales Tax (10%)' },
+  service8: { sstRate: 0.08, taxLabel: 'Service Tax (8%)' },
+  service6: { sstRate: 0.06, taxLabel: 'Service Tax (6%)' }, // food & beverage services
+};
+
 export const DOCUMENT_TYPES = {
   sales: 'Sales e-Invoice',
   purchase: 'Purchase invoice / receipt',
@@ -362,10 +369,10 @@ const documentSpecs = [
     date: '2026-09-28',
     party: clientParty('c3'),
     lines: [
-      ['Teh tarik premix (carton)', 20, 48.0],
-      ['Delivery charge', 1, 188.15],
+      ['Coffee machine servicing', 1, 960.0],
+      ['On-site call-out fee', 1, 188.15],
     ],
-    sstRate: 0.08,
+    ...TAX.service8,
     fileName: 'INV-2026-0412.pdf',
     fileSize: 253952,
     uploadedAt: '2026-09-28T09:12:00',
@@ -407,15 +414,15 @@ const documentSpecs = [
     date: '2026-09-25',
     party: parties.seriMurni,
     lines: [
-      ['Beras wangi 10kg (bag)', 60, 42.0],
-      ['Minyak masak 5kg', 20, 31.5],
+      ['Stainless steel stockpot 40L', 6, 420.0],
+      ['Commercial rice cooker 10L', 2, 315.0],
     ],
-    sstRate: 0.08,
+    ...TAX.sales10,
     fileName: 'INV-2026-0409.pdf',
     fileSize: 231424,
     uploadedAt: '2026-09-25T14:30:00',
     overrides: {
-      total: { value: 3042, confidence: 58, reason: 'Digits unclear', edited: true },
+      total: { value: 3456, confidence: 58, reason: 'Digits unclear', edited: true },
     },
   },
   {
@@ -427,10 +434,10 @@ const documentSpecs = [
     date: '2026-09-18',
     party: clientParty('c2'),
     lines: [
-      ['Beras basmathi 5kg', 30, 38.0],
-      ['Rempah kari 1kg', 25, 22.0],
+      ['Food packaging boxes (carton)', 30, 38.0],
+      ['Paper bags (bundle)', 25, 22.0],
     ],
-    sstRate: 0.08,
+    ...TAX.sales10,
     fileName: 'INV-2026-0401.pdf',
     fileSize: 219136,
     uploadedAt: '2026-09-18T09:05:00',
@@ -446,10 +453,10 @@ const documentSpecs = [
     date: '2026-09-15',
     party: parties.percetakan,
     lines: [
-      ['Delivery order books, 3-ply', 10, 18.5],
-      ['Company letterhead A4 (ream)', 4, 32.0],
+      ['Toner cartridge', 2, 92.5],
+      ['Copier paper A4 (box)', 4, 32.0],
     ],
-    sstRate: 0.08,
+    ...TAX.sales10,
     category: 'Printing & stationery',
     fileName: 'percetakan-PP-2026-1187.pdf',
     fileSize: 180224,
@@ -464,8 +471,8 @@ const documentSpecs = [
     number: 'INV-2026-0406',
     date: '2026-09-22',
     party: parties.majuJaya,
-    lines: [['Tepung gandum 25kg (bag)', 40, 58.0]],
-    sstRate: 0.08,
+    lines: [['Commercial dough mixer 10L', 2, 1160.0]],
+    ...TAX.sales10,
     fileName: 'INV-2026-0406.pdf',
     fileSize: 204800,
     uploadedAt: '2026-09-22T11:15:00',
@@ -487,7 +494,7 @@ const documentSpecs = [
       ['Catering — nasi kandar set (pax)', 120, 14.5],
       ['Teh tarik (jug)', 30, 18.0],
     ],
-    sstRate: 0.06,
+    ...TAX.service6,
     fileName: 'NKC-0098.pdf',
     fileSize: 196608,
     uploadedAt: '2026-09-26T17:45:00',
@@ -530,7 +537,7 @@ const documentSpecs = [
       ['Catering — staff lunch (pax)', 45, 13.0],
       ['Air sirap bandung (jug)', 10, 16.0],
     ],
-    sstRate: 0.06,
+    ...TAX.service6,
     fileName: 'NKC-0095.pdf',
     fileSize: 188416,
     uploadedAt: '2026-09-16T15:00:00',
@@ -547,11 +554,11 @@ const documentSpecs = [
     date: '2026-09-24',
     party: parties.kopiTanahTinggi,
     lines: [
-      ['Serbuk kopi 1kg', 12, 26.0],
-      ['Teh serbuk 1kg', 10, 19.5],
+      ['Paper cups 12oz (carton)', 12, 26.0],
+      ['Cup lids (carton)', 10, 19.5],
     ],
-    sstRate: 0.1,
-    category: 'Cost of sales — ingredients',
+    ...TAX.sales10,
+    category: 'Cost of sales — stock',
     fileName: 'KTT-3310.pdf',
     fileSize: 172032,
     uploadedAt: '2026-09-24T10:40:00',
@@ -627,8 +634,8 @@ const documentSpecs = [
     number: 'MJ-7747',
     date: '2026-09-26',
     party: parties.majuJaya,
-    lines: [['Gula pasir 50kg (bag)', 4, 142.0]],
-    sstRate: 0.05,
+    lines: [['Plastic cups 16oz (carton)', 4, 142.0]],
+    ...TAX.sales10,
     category: 'Cost of sales — stock',
     fileName: 'maju-jaya-MJ-7747.pdf',
     fileSize: 165888,
@@ -664,8 +671,8 @@ const documentSpecs = [
     number: 'MJ-7741',
     date: '2026-09-19',
     party: parties.majuJaya,
-    lines: [['Susu pekat manis (carton)', 5, 92.0]],
-    sstRate: 0.05,
+    lines: [['Cup sealing film (roll)', 5, 92.0]],
+    ...TAX.sales10,
     category: 'Cost of sales — stock',
     fileName: 'maju-jaya-MJ-7741.pdf',
     fileSize: 161792,
@@ -954,27 +961,31 @@ const UPLOAD_TEMPLATES = {
     {
       party: parties.seriMurni,
       lines: [
-        ['Beras wangi 10kg (bag)', 25, 42.0],
-        ['Gula pasir 1kg', 40, 2.85],
+        ['Cold room maintenance', 1, 850.0],
+        ['Filter replacement service', 2, 60.0],
       ],
+      tax: TAX.service8,
     },
     {
       party: parties.majuJaya,
       lines: [
-        ['Minyak masak 5kg', 18, 31.5],
-        ['Delivery charge', 1, 45.0],
+        ['Stainless steel shelving unit', 3, 410.0],
+        ['Wall-mounted pot rack', 2, 95.0],
       ],
+      tax: TAX.sales10,
     },
   ],
   purchase: [
     {
       party: parties.majuJaya,
-      lines: [['Gula pasir 50kg (bag)', 2, 142.0]],
+      lines: [['Takeaway containers (carton)', 2, 142.0]],
+      tax: TAX.sales10,
       category: 'Cost of sales — stock',
     },
     {
       party: parties.percetakan,
-      lines: [['Invoice books, 2-ply', 6, 16.0]],
+      lines: [['Receipt printer paper rolls (box)', 6, 16.0]],
+      tax: TAX.sales10,
       category: 'Printing & stationery',
     },
   ],
@@ -1020,7 +1031,7 @@ export const SAMPLE_DOCUMENTS = {
     label: 'Sample thermal receipt',
     fileName: 'sample-receipt-MJ-7802.png',
     src: '/samples/sample-receipt.png',
-    fileSize: 49725, // bytes — update after re-running scripts/render-samples.mjs
+    fileSize: 51562, // bytes — update after re-running scripts/render-samples.mjs
     // Receipts don't name the buyer, so any client can record this purchase.
     clientId: null,
     number: 'MJ-7802',
@@ -1036,6 +1047,11 @@ export const SAMPLE_DOCUMENTS = {
   },
 };
 
+/** A template's tax applies only when the seller is SST-registered; otherwise no tax is charged. */
+function templateTax(template, seller) {
+  return seller?.sst && template.tax ? template.tax : { sstRate: 0, taxLabel: null };
+}
+
 /** Builds the exact document a sample file represents (also used to render the PNG). */
 export function buildSampleDocument(type, { id, client, uploadedAt, uploadedBy, status = 'processing' }) {
   const s = SAMPLE_DOCUMENTS[type];
@@ -1050,8 +1066,9 @@ export function buildSampleDocument(type, { id, client, uploadedAt, uploadedBy, 
     date: s.date,
     party: s.party || t.party,
     lines: s.lines || t.lines,
-    sstRate: s.taxRate ?? ((type === 'sales' ? client.sst : t.party.sst) ? 0.08 : 0),
-    taxLabel: s.taxLabel,
+    ...(s.taxRate !== undefined
+      ? { sstRate: s.taxRate, taxLabel: s.taxLabel }
+      : templateTax(t, type === 'sales' ? client : t.party)),
     category: t.category,
     classification: s.classification,
     preview: s.preview,
@@ -1093,7 +1110,7 @@ export function buildUploadedDocument(meta) {
     date: meta.uploadedAt.slice(0, 10),
     party: t.party,
     lines: t.lines,
-    sstRate: (meta.type === 'sales' ? client.sst : t.party.sst) ? 0.08 : 0,
+    ...templateTax(t, meta.type === 'sales' ? client : t.party),
     category: t.category,
     preview: meta.type === 'purchase' && isImage ? 'receipt' : 'invoice',
     fileName: meta.fileName,

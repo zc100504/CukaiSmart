@@ -168,12 +168,12 @@ function MiniReview() {
             </thead>
             <tbody>
               <tr>
-                <td>Teh tarik premix (carton)</td>
-                <td>20</td>
+                <td>Coffee machine servicing</td>
+                <td>1</td>
                 <td>960.00</td>
               </tr>
               <tr>
-                <td>Delivery charge</td>
+                <td>On-site call-out fee</td>
                 <td>1</td>
                 <td>188.15</td>
               </tr>
@@ -184,11 +184,11 @@ function MiniReview() {
             <span>1,148.15</span>
           </div>
           <div className="sg-doc-sum">
-            <span>SST 8%</span>
+            <span>Service Tax (8%)</span>
             <span>91.85</span>
           </div>
           <div className="sg-doc-total">
-            <span>Total (incl. SST)</span>
+            <span>Total (incl. tax)</span>
             <strong>{region('total', 'RM 1,240.00', 'doc-region--faded')}</strong>
           </div>
         </div>
