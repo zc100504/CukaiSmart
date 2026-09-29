@@ -39,7 +39,10 @@ simple icons. No excessive gradients, glows or complicated animations.
 
 **Landing hero:** centred text above a product window showing the review screen, with a subtle CSS 3D tilt that
 flattens on scroll. The AI-and-human story animates inside the window (AI = teal scan, human = cursor confirming a
-field). No three.js in the hero. The story plays 3 times, then rests on the final frame.
+field). The product window has layered depth (UI parts lift toward the viewer) and mouse parallax. Up to three
+matte 3D brand objects (receipt, RM coin, shield with check) float around the window. Soft shadows only. The 3D
+objects are the only three.js in the hero (lazy-loaded). The story plays 3 times, then rests on the final frame,
+and floating motion stops with it.
 
 ### Colours
 | Token | Hex | Use |

@@ -1790,15 +1790,20 @@ a.logo:focus-visible {
 
 /* ---------- Hero: centred text above a product window ---------- */
 .hero-pw {
+  position: relative;
+  isolation: isolate; /* layers: floor 0 < window 1 < 3D objects 2 < floating cards 3 < text 4 */
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow-x: clip;
   padding: calc(var(--navbar-height) + clamp(40px, 11vh, 140px)) var(--space-4) var(--space-6);
   /* Pale gradient at the top, fading into the page background behind the lower window. */
   background: linear-gradient(to bottom, transparent 45%, var(--bg) 80%), var(--gradient-hero);
 }
 
 .hero-pw__text {
+  position: relative;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1851,6 +1856,8 @@ a.logo:focus-visible {
 }
 
 .hero-trust {
+  position: relative;
+  z-index: 4;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -1873,7 +1880,9 @@ a.logo:focus-visible {
 }
 
 /* ---------- Product window ---------- */
+/* No z-index here, so the window, the 3D layer and the cards interleave in the hero's stacking context. */
 .pw {
+  position: relative;
   width: 100%;
   max-width: 1120px;
   /* Window top lands at about 60% of the viewport at 1440 × 900 and runs below the fold. */
@@ -1881,7 +1890,9 @@ a.logo:focus-visible {
 }
 
 .pw__frame {
-  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  transform-style: preserve-3d;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--card);
@@ -1899,6 +1910,7 @@ a.logo:focus-visible {
   height: 44px;
   padding: 0 var(--space-2);
   border-bottom: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
   background: var(--card);
 }
 
@@ -1920,6 +1932,8 @@ a.logo:focus-visible {
 
 .pw__body {
   position: relative;
+  transform-style: preserve-3d;
+  border-radius: 0 0 16px 16px;
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   gap: var(--space-3);
@@ -1948,6 +1962,7 @@ a.logo:focus-visible {
 }
 
 .pw__panel {
+  transform-style: preserve-3d;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
@@ -1966,6 +1981,7 @@ a.logo:focus-visible {
 }
 
 .pw__rows {
+  transform-style: preserve-3d;
   margin: 0;
   padding: var(--space-1) var(--space-1);
   list-style: none;
@@ -2049,6 +2065,7 @@ a.logo:focus-visible {
 }
 
 .pw__footer {
+  transform-style: preserve-3d;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -2060,6 +2077,160 @@ a.logo:focus-visible {
 .pw__badge {
   display: inline-flex;
   transform-origin: left center;
+}
+
+/* Shadows grow with depth: card (doc/panel) → dropdown → lift (flagged row, badge pop, floating cards). */
+.pw__doc,
+.pw__panel {
+  box-shadow: var(--shadow-dropdown);
+}
+
+.pw-row {
+  transition: box-shadow var(--transition);
+}
+
+.pw-row--lifted {
+  box-shadow: var(--shadow-lift);
+}
+
+.pw__badge .badge {
+  transition: box-shadow var(--transition);
+}
+
+.pw__badge.is-lifted .badge {
+  box-shadow: var(--shadow-lift);
+}
+
+/* ---------- Floating cards (share the window transform, above the 3D objects) ---------- */
+.pw__cards {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  transform-origin: 50% 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.pw-card {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: 10px var(--space-1-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-lift);
+  font-size: var(--fs-caption);
+  white-space: nowrap;
+}
+
+/* Beside the document's line items, partly outside the left edge (away from the buyer TIN). */
+.pw-card--confidence {
+  left: -64px;
+  top: 50%;
+}
+
+/* Level with the top rows, partly outside the right edge (below the status chip, above the TIN row). */
+.pw-card--audit {
+  right: -72px;
+  top: 21%;
+}
+
+/* Narrower screens: less room beside the window, and depth pushes the cards outward — tuck them in. */
+@media (max-width: 1399px) {
+  .pw-card--confidence {
+    left: 8px;
+  }
+
+  .pw-card--audit {
+    right: 8px;
+  }
+}
+
+.pw-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pw-card__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+
+.pw-card__title strong {
+  color: var(--teal-text);
+}
+
+.pw-card__title svg {
+  color: var(--teal);
+}
+
+.pw-card__sub {
+  font-size: var(--fs-caption-sm);
+  color: var(--text-secondary);
+}
+
+.pw-card__ring {
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+
+.pw-card__ring-track,
+.pw-card__ring-fill {
+  fill: none;
+  stroke-width: 5;
+}
+
+.pw-card__ring-track {
+  stroke: var(--teal-pale);
+}
+
+.pw-card__ring-fill {
+  stroke: var(--teal);
+  stroke-linecap: round;
+}
+
+.pw-card__check {
+  display: inline-flex;
+  color: var(--success);
+}
+
+/* ---------- Perspective grid floor behind and under the window ---------- */
+.pw-floor {
+  position: absolute;
+  z-index: 0;
+  left: -30%;
+  right: -30%;
+  top: 30%;
+  height: 110%;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: var(--floor-x, 0) var(--floor-y, 0);
+  opacity: 0.55;
+  transform: perspective(900px) rotateX(64deg);
+  transform-origin: 50% 0;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 35%, black 25%, transparent 70%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 35%, black 25%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ---------- 3D brand objects (lazy three.js canvas over the hero) ---------- */
+.hero-objects {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hero-objects__canvas {
+  position: absolute;
+  inset: 0;
 }
 
 /* Click ripple: --p goes 0 → 1 */
@@ -2148,6 +2319,7 @@ a.logo:focus-visible {
 
 .docp__meta dt {
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .docp__meta dd {
@@ -2442,6 +2614,12 @@ a.logo:focus-visible {
 
   .pw__body {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pw__cards,
+  .pw-floor,
+  .hero-objects {
+    display: none;
   }
 
   .pw-row {

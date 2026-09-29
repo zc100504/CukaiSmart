@@ -84,5 +84,22 @@ export function story(t) {
       confirm: seg(t, CONFIRM_CLICK, CONFIRM_CLICK + 0.45),
       approve: seg(t, APPROVE_CLICK, APPROVE_CLICK + 0.45),
     },
+    /** 0 → 1: flagged TIN row lifts toward the viewer while it needs review, settles once green. */
+    tinLift: ease(seg(t, 3.5, 3.9)) * (1 - ease(seg(t, CONFIRM_CLICK + 0.1, CONFIRM_CLICK + 0.5))),
+    /** 0 → 1 → 0: badge pops out toward the viewer, then settles on its layer. */
+    badgeLift: ease(seg(t, APPROVE_CLICK + 0.05, APPROVE_CLICK + 0.4)) * (1 - ease(seg(t, APPROVE_CLICK + 0.55, APPROVE_CLICK + 1.15))),
+    /** Floating cards outside the window. */
+    cards: {
+      confidence: {
+        opacity: ease(seg(t, 1.1, 1.5)) * (1 - ease(seg(t, 3.9, 4.3))),
+        ring: ease(seg(t, 1.2, 3.4)),
+      },
+      audit: { opacity: ease(seg(t, CONFIRM_CLICK + 0.2, CONFIRM_CLICK + 0.6)) * (1 - seg(t, 8.6, 9.0)) },
+    },
+    /** 3D objects: the coin spins once and the shield bounces when MyInvois-ready appears. */
+    objects: {
+      coinSpin: ease(seg(t, APPROVE_CLICK + 0.05, APPROVE_CLICK + 0.95)),
+      shieldBounce: Math.sin(seg(t, APPROVE_CLICK + 0.05, APPROVE_CLICK + 0.6) * Math.PI),
+    },
   };
 }

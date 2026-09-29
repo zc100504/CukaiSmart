@@ -20,6 +20,7 @@ import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import Modal from '../components/Modal.jsx';
 import ProductWindow from '../components/hero/ProductWindow.jsx';
+import HeroObjects from '../components/hero/HeroObjects.jsx';
 import { usePrefersReducedMotion } from '../components/useMediaQuery.js';
 
 const DEMO_STEPS = [
@@ -136,6 +137,7 @@ export default function Landing() {
           </div>
 
           <ProductWindow />
+          <HeroObjects />
 
           <ul className="hero-trust">
             <li>
