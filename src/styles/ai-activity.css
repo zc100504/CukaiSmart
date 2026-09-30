@@ -1,0 +1,50 @@
+.ai-activity {
+  --activity-size: 236px;
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  width: var(--activity-size);
+  height: var(--activity-size);
+  place-items: center;
+  isolation: isolate;
+}
+.ai-activity--compact { --activity-size: 152px; }
+.ai-activity__aura { position: absolute; inset: 12%; border-radius: 50%; background: radial-gradient(circle, var(--teal) 0%, transparent 68%); opacity: .16; filter: blur(22px); animation: ai-aura 3s ease-in-out infinite; }
+.ai-activity__ring { position: absolute; border: 1px solid; border-radius: 50%; pointer-events: none; }
+.ai-activity__ring--outer { inset: 2%; border-color: color-mix(in srgb, var(--teal) 35%, transparent); }
+.ai-activity__ring--middle { inset: 11%; border-color: color-mix(in srgb, var(--card) 18%, transparent); }
+.ai-activity__ring--inner { inset: 20%; border-color: color-mix(in srgb, var(--teal) 38%, transparent); }
+.ai-activity__arc { position: absolute; border: 2px solid transparent; border-radius: 50%; animation: ai-orbit 10s linear infinite; }
+.ai-activity__arc--one { inset: 2%; border-top-color: var(--teal); border-right-color: color-mix(in srgb, var(--teal) 45%, transparent); transform: rotate(25deg); }
+.ai-activity__arc--two { inset: 11%; border-bottom-color: color-mix(in srgb, var(--card) 75%, transparent); animation-duration: 13s; animation-direction: reverse; }
+.ai-activity__core { position: relative; display: grid; width: 55%; height: 55%; overflow: hidden; place-items: center; border: 1px solid color-mix(in srgb, var(--teal) 50%, transparent); border-radius: 50%; background: radial-gradient(circle at 48% 42%, var(--navy-pale), color-mix(in srgb, var(--navy) 72%, var(--teal)) 82%); box-shadow: 0 0 0 8px color-mix(in srgb, var(--teal) 10%, transparent), 0 18px 46px color-mix(in srgb, var(--navy) 45%, transparent); animation: ai-core-breathe 3s ease-in-out infinite; }
+.ai-activity__grid { position: absolute; inset: 0; background-image: linear-gradient(color-mix(in srgb, var(--teal) 16%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--teal) 16%, transparent) 1px, transparent 1px); background-size: 17px 17px; opacity: .38; mask-image: radial-gradient(circle, #000 42%, transparent 73%); }
+.ai-activity__core img { position: relative; z-index: 1; display: block; width: 57%; height: 76%; object-fit: contain; filter: brightness(1.25) saturate(1.1) drop-shadow(0 5px 8px color-mix(in srgb, var(--navy) 28%, transparent)); }
+.ai-activity__scan { position: absolute; z-index: 2; top: -18%; left: 0; width: 100%; height: 24%; border-bottom: 1px solid color-mix(in srgb, var(--card) 70%, transparent); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--teal) 32%, transparent)); animation: ai-scan 2.8s ease-in-out infinite; }
+.ai-activity__node { position: absolute; z-index: 2; width: 9px; height: 9px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 5px color-mix(in srgb, var(--teal) 16%, transparent); animation: ai-node 2.8s ease-in-out infinite; }
+.ai-activity__node--one { top: 4%; left: 48%; }
+.ai-activity__node--two { top: 27%; right: 7%; background: var(--card); box-shadow: 0 0 0 5px color-mix(in srgb, var(--card) 12%, transparent); animation-delay: -.6s; }
+.ai-activity__node--three { right: 17%; bottom: 13%; animation-delay: -1.2s; }
+.ai-activity__node--four { bottom: 7%; left: 25%; background: var(--gold); box-shadow: 0 0 0 5px color-mix(in srgb, var(--gold) 15%, transparent); animation-delay: -1.8s; }
+.ai-activity__node--five { top: 29%; left: 8%; width: 6px; height: 6px; animation-delay: -2.2s; }
+.ai-activity__signal { position: absolute; width: 32px; height: 1px; background: linear-gradient(90deg, transparent, var(--teal), transparent); opacity: .6; animation: ai-signal 3s ease-in-out infinite; }
+.ai-activity__signal--one { top: 30%; left: 0; transform: rotate(-28deg); }
+.ai-activity__signal--two { right: 0; bottom: 32%; transform: rotate(-28deg); animation-delay: -1.5s; }
+.ai-activity--light .ai-activity__aura { opacity: .12; filter: blur(28px); }
+.ai-activity--light .ai-activity__ring--outer { border-color: color-mix(in srgb, var(--teal) 30%, transparent); }
+.ai-activity--light .ai-activity__ring--middle { border-color: color-mix(in srgb, var(--navy) 12%, transparent); }
+.ai-activity--light .ai-activity__ring--inner { border-color: color-mix(in srgb, var(--teal) 28%, transparent); }
+.ai-activity--light .ai-activity__arc--two { border-bottom-color: color-mix(in srgb, var(--navy) 34%, transparent); }
+.ai-activity--light .ai-activity__core { border-color: color-mix(in srgb, var(--teal) 35%, transparent); background: radial-gradient(circle at 50% 42%, var(--card), var(--teal-pale) 78%); box-shadow: 0 0 0 7px color-mix(in srgb, var(--teal) 7%, transparent), 0 14px 34px color-mix(in srgb, var(--navy) 14%, transparent); }
+.ai-activity--light .ai-activity__grid { display: none; }
+.ai-activity--light .ai-activity__core img { filter: saturate(1.05) drop-shadow(0 4px 7px color-mix(in srgb, var(--navy) 16%, transparent)); }
+.ai-activity--light .ai-activity__node--two { background: var(--navy); box-shadow: 0 0 0 5px color-mix(in srgb, var(--navy) 9%, transparent); }
+.ai-activity--light .ai-activity__scan { border-bottom-color: color-mix(in srgb, var(--teal) 45%, transparent); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--teal) 14%, transparent)); }
+.ai-activity--complete .ai-activity__aura, .ai-activity--complete .ai-activity__arc, .ai-activity--complete .ai-activity__core, .ai-activity--complete .ai-activity__node, .ai-activity--complete .ai-activity__signal { animation: none; }
+@keyframes ai-aura { 50% { opacity: .29; transform: scale(1.12); } }
+@keyframes ai-orbit { to { transform: rotate(385deg); } }
+@keyframes ai-core-breathe { 50% { transform: scale(1.04); } }
+@keyframes ai-node { 50% { transform: scale(1.32); opacity: .65; } }
+@keyframes ai-scan { 0% { transform: translateY(0); opacity: 0; } 18% { opacity: .75; } 72%, 100% { transform: translateY(650%); opacity: 0; } }
+@keyframes ai-signal { 50% { opacity: .12; } }
+@media (prefers-reduced-motion: reduce) { .ai-activity *, .ai-activity *::before, .ai-activity *::after { animation: none !important; transition: none !important; } }

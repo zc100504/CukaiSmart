@@ -101,6 +101,14 @@ export default function Upload() {
   // Adding files
   // ---------------------------------------------------------------------------
   const addFiles = (files) => {
+    if (queue.length > 0 && files.length === 1 && queue.some((q) => q.name === files[0].name && q.size === files[0].size)) {
+      setRejected([{ name: files[0].name, reason: 'Already in the queue.' }]);
+      return;
+    }
+    if (queue.length > 0 || files.length > 1) {
+      toast.info('One document at a time', 'This prototype processes one document per session. Complete or remove the current document before adding another.');
+      return;
+    }
     const accepted = [];
     const problems = [];
     let slots = remaining - queue.length;
@@ -135,6 +143,10 @@ export default function Upload() {
       setRejected([{ name: sample.fileName, reason: 'Already in the queue.' }]);
       return;
     }
+    if (queue.length > 0) {
+      toast.info('One document at a time', 'This prototype processes one document per session. Complete or remove the current document before adding another.');
+      return;
+    }
     if (remaining - queue.length <= 0) {
       setRejected([{ name: sample.fileName, reason: 'Pooled document limit reached for this billing period.' }]);
       return;
@@ -165,7 +177,7 @@ export default function Upload() {
       uploaded.map((q) => ({ clientId, type: q.type, fileName: q.name, fileSize: q.size, sample: q.sample }))
     );
     if (!result.ok) {
-      toast.error('Could not process documents', result.message);
+      toast.error('Could not process document', result.message);
       return;
     }
     const switched = clientId !== activeClientId;
@@ -354,13 +366,13 @@ export default function Upload() {
         <div className="card__footer upload-footer">
           <p className="text-caption">
             {uploaded.length === 0
-              ? 'Process Documents unlocks once a file has finished uploading.'
+              ? 'Process Document unlocks once a file has finished uploading.'
               : stillUploading > 0
                 ? 'Files still uploading won’t be included.'
                 : `Ready to process for ${client.name}.`}
           </p>
           <Button onClick={process} disabled={uploaded.length === 0}>
-            {uploaded.length > 1 ? `Process ${uploaded.length} documents` : 'Process Documents'}
+            Process Document
           </Button>
         </div>
       </Card>
