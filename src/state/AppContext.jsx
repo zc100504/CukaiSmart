@@ -202,6 +202,18 @@ function reducer(state, action) {
       });
     }
 
+    case 'CLEAR_DUPLICATE': {
+      const doc = findDoc(action.docId);
+      if (!doc || doc.duplicateCleared) return state;
+      let next = updateDoc(state, doc.id, (d) => ({ ...d, duplicateCleared: true }));
+      next = syncComplianceStatus(next, doc.id);
+      return withEvent(next, meta, {
+        ...docEvent(doc),
+        action: 'duplicate_cleared',
+        message: 'Possible duplicate reviewed and cleared as a separate document',
+      });
+    }
+
     case 'CONFIRM_FIELD': {
       const doc = findDoc(action.docId);
       const field = doc?.fields.find((f) => f.key === action.key);
@@ -456,6 +468,15 @@ export function AppProvider({ children }) {
         return ok();
       },
 
+      clearDuplicate: (docId) => {
+        const doc = getDoc(docId);
+        if (!doc) return fail('Document not found.');
+        if (doc.stage !== 'compliance') return fail('Duplicate review is only available during compliance checks.');
+        if (doc.duplicateCleared) return ok();
+        run({ type: 'CLEAR_DUPLICATE', docId });
+        return ok();
+      },
+
       confirmField: (docId, key) => {
         const doc = getDoc(docId);
         if (!doc) return fail('Document not found.');
@@ -519,7 +540,16 @@ export function AppProvider({ children }) {
       },
 
       updateProfile: ({ user, business }) => {
-        run({ type: 'UPDATE_PROFILE', user, business });
+        const name = user?.name?.trim();
+        const email = user?.email?.trim();
+        const businessName = business?.name?.trim();
+        if (!name || !email || !businessName) return fail('Display name, email and workspace name are required.');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Enter a valid email address.');
+        run({
+          type: 'UPDATE_PROFILE',
+          user: { name, email },
+          business: { name: businessName, brn: business?.brn?.trim() || '' },
+        });
         return ok();
       },
 

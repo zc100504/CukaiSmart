@@ -60,7 +60,8 @@ function check(id, label, passed, { blocking = true, fieldKey = null, pass, fail
   };
 }
 
-function findDuplicate(doc, documents) {
+export function getDuplicateDocument(doc, documents) {
+  if (doc.duplicateCleared) return null;
   const invoiceNo = getValue(doc, 'invoiceNo');
   const supplierTin = getValue(doc, 'supplierTin');
   const supplierName = getValue(doc, 'supplierName');
@@ -147,13 +148,14 @@ export function getComplianceChecks(doc, documents = []) {
     })
   );
 
-  const duplicate = findDuplicate(doc, documents);
+  const duplicate = getDuplicateDocument(doc, documents);
   checks.push(
     check('duplicate', 'Duplicate invoice', !duplicate, {
+      blocking: false,
       fieldKey: 'invoiceNo',
-      pass: 'No matching invoice found in records.',
+      pass: doc.duplicateCleared ? 'Potential duplicate reviewed and cleared.' : 'No matching invoice found in records.',
       fail: duplicate
-        ? `Possible duplicate: ${getValue(duplicate, 'invoiceNo')} from ${getValue(duplicate, 'supplierName')} is already in records.`
+        ? `Possible duplicate detected. Review recommended before submission. A matching record for ${getValue(duplicate, 'invoiceNo')} already exists.`
         : '',
     })
   );
@@ -222,18 +224,66 @@ export function countByStatus(documents) {
  * Documents a human needs to act on, most urgent first:
  * blocking errors → most unresolved low-confidence fields → earliest due date.
  */
-export function getReviewQueue(documents) {
+export const REVIEW_REASONS = {
+  missing: 'Missing information',
+  confidence: 'Low-confidence extraction',
+  validation: 'Failed validation',
+  inconsistent: 'Inconsistent values',
+  duplicate: 'Possible duplicate',
+  confirmation: 'Confirmation required',
+};
+
+/** Derives a queue reason from the existing fields and compliance checks. */
+export function getReviewQueueDetails(documents) {
   return documents
     .filter((d) => d.status === 'needs-review' || d.status === 'error')
-    .map((d) => ({ doc: d, pending: getPendingFields(d).length }))
+    .map((doc) => {
+      const pendingFields = getPendingFields(doc);
+      const checks = doc.stage === 'compliance' ? getComplianceChecks(doc, documents) : [];
+      const blocker = checks.find((item) => item.status === 'fail');
+      const duplicate = checks.find((item) => item.id === 'duplicate' && item.status === 'warning');
+      const warning = checks.find((item) => item.status === 'warning');
+      let reason = 'confirmation';
+      let issue = 'Review and approve the extracted document data.';
+
+      if (blocker) {
+        reason = blocker.id === 'totals'
+          ? 'inconsistent'
+          : /missing|required|not found/i.test(blocker.message)
+            ? 'missing'
+            : 'validation';
+        issue = blocker.message;
+      } else if (duplicate) {
+        reason = 'duplicate';
+        issue = duplicate.message;
+      } else if (pendingFields.length > 0) {
+        reason = 'confidence';
+        const first = pendingFields[0];
+        issue = `${pendingFields.length} ${pendingFields.length === 1 ? 'field requires' : 'fields require'} confirmation${first?.reason ? ` — ${first.label}: ${first.reason}` : ''}.`;
+      } else if (warning) {
+        reason = 'confirmation';
+        issue = warning.message;
+      }
+
+      return {
+        id: doc.id,
+        doc,
+        pending: pendingFields.length,
+        reason,
+        reasonLabel: REVIEW_REASONS[reason],
+        issue,
+        priority: doc.status === 'error' ? 0 : pendingFields.length > 0 ? 1 : 2,
+      };
+    })
     .sort((a, b) => {
-      const errA = a.doc.status === 'error' ? 0 : 1;
-      const errB = b.doc.status === 'error' ? 0 : 1;
-      if (errA !== errB) return errA - errB;
+      if (a.priority !== b.priority) return a.priority - b.priority;
       if (a.pending !== b.pending) return b.pending - a.pending;
       return a.doc.dueDate.localeCompare(b.doc.dueDate);
-    })
-    .map((x) => x.doc);
+    });
+}
+
+export function getReviewQueue(documents) {
+  return getReviewQueueDetails(documents).map((item) => item.doc);
 }
 
 /**
