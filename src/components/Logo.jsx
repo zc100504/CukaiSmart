@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 // Brand logo (icon + "CukaiSmart" wordmark) from public/LOGO.png.
 // The PNG has transparent padding around the artwork; .logo crops it in CSS.
-const LOGO_SRC = '/LOGO.png';
+const LOGO_SRC = `${import.meta.env.BASE_URL}LOGO.png`;
 
 /** size: 'sm' (hero product window) | 'md' (navbar, sidebar) | 'lg' (auth pages, style guide) */
 export default function Logo({ to = '/', size = 'md' }) {

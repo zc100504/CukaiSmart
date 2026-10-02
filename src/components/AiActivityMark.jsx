@@ -17,7 +17,7 @@ export default function AiActivityMark({ compact = false, complete = false, ligh
       <span className="ai-activity__node ai-activity__node--five" />
       <span className="ai-activity__core">
         <span className="ai-activity__grid" />
-        <img src="/processing-mark.png" alt="" />
+        <img src={`${import.meta.env.BASE_URL}processing-mark.png`} alt="" />
         {!complete && <span className="ai-activity__scan" />}
       </span>
       <span className="ai-activity__signal ai-activity__signal--one" />

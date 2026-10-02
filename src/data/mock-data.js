@@ -1003,7 +1003,7 @@ export const SAMPLE_DOCUMENTS = {
     key: 'sales',
     label: 'Sample sales invoice',
     fileName: 'sample-sales-invoice-INV-2026-0418.png',
-    src: '/samples/sample-sales-invoice.png',
+    src: `${import.meta.env.BASE_URL}samples/sample-sales-invoice.png`,
     fileSize: 102634, // bytes — update after re-running scripts/render-samples.mjs
     // A sales invoice is issued by the client, so this sample belongs to Ali Trading.
     clientId: 'c1',
@@ -1030,7 +1030,7 @@ export const SAMPLE_DOCUMENTS = {
     key: 'purchase',
     label: 'Sample thermal receipt',
     fileName: 'sample-receipt-MJ-7802.png',
-    src: '/samples/sample-receipt.png',
+    src: `${import.meta.env.BASE_URL}samples/sample-receipt.png`,
     fileSize: 51562, // bytes — update after re-running scripts/render-samples.mjs
     // Receipts don't name the buyer, so any client can record this purchase.
     clientId: null,
