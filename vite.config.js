@@ -5,5 +5,5 @@ import react from '@vitejs/plugin-react';
 // Dev server stays at / so local URLs don't change.
 export default defineConfig(({ command }) => ({
   plugins: [react()],
-  base: command === 'build' ? '/CukaiSmart---AI-Tax-Agent/' : '/',
+  base: command === 'build' ? '/CukaiSmart/' : '/',
 }));

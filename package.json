@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "homepage": "https://zc100504.github.io/CukaiSmart---AI-Tax-Agent",
+  "homepage": "https://zc100504.github.io/CukaiSmart/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
